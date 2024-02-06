@@ -2,6 +2,7 @@ package views
 
 import (
 	"html/template"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -58,4 +59,8 @@ func getTemplates() *template.Template {
 	})
 
 	return globalTemplate
+}
+
+func Execute(w io.Writer, templateName string, data any) error {
+	return getTemplates().ExecuteTemplate(w, templateName, data)
 }
