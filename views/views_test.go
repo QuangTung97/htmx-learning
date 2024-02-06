@@ -1,4 +1,4 @@
-package htmx
+package views
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ func TestTemplate(t *testing.T) {
 	)
 
 	var buf bytes.Buffer
-	err := tmpl.Lookup("main.html").Execute(&buf, nil)
+	err := tmpl.ExecuteTemplate(&buf, "main.html", nil)
 	assert.Equal(t, nil, err)
 	g.Assert(t, "simple", buf.Bytes())
 }

@@ -1,4 +1,4 @@
-package htmx
+package views
 
 import (
 	"html/template"
