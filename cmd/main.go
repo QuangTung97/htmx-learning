@@ -18,10 +18,12 @@ func main() {
 		return ctx.Render("reload.html", nil)
 	})
 
-	mux.Get("/users/{userId}", func(ctx route.Context) error {
-		fmt.Println("USERID:", ctx.GetParam("userId"))
-		fmt.Println("Another:", ctx.GetParam("another"))
-		return nil
+	mux.Route("/users", func(router route.Router) {
+		router.Get("/{userId}", func(ctx route.Context) error {
+			fmt.Println("USERID:", ctx.GetParam("userId"))
+			fmt.Println("Another:", ctx.GetParam("another"))
+			return nil
+		})
 	})
 
 	fmt.Println("Start HTTP on :8080")
