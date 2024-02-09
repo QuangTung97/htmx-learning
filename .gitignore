@@ -3,5 +3,5 @@
 /views/testdata/
 /views/styles/node_modules
 
-/public
+/public/*
 !/public/htmx@*.js
