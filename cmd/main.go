@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	"htmx/pkg/route"
 )
+
+var counter atomic.Int64
 
 func main() {
 	mux := route.NewMux()
@@ -15,7 +18,12 @@ func main() {
 	})
 
 	mux.Get("/reload", func(ctx route.Context) error {
-		return ctx.Render("reload.html", nil)
+		type tmplData struct {
+			Count int64
+		}
+		return ctx.Render("reload.html", tmplData{
+			Count: counter.Add(1),
+		})
 	})
 
 	mux.Route("/users", func(router route.Router) {
