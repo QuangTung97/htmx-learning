@@ -26,6 +26,13 @@ func main() {
 		})
 	})
 
+	mux.GetMux().Handle(
+		"/public/*",
+		http.StripPrefix(
+			"/public/", http.FileServer(http.Dir("./public")),
+		),
+	)
+
 	fmt.Println("Start HTTP on :8080")
 	if err := http.ListenAndServe(":8080", mux.GetMux()); err != nil {
 		panic(err)

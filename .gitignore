@@ -1,2 +1,7 @@
 /.idea
+
 /views/testdata/
+/views/styles/node_modules
+
+/public
+!/public/htmx@*.js
