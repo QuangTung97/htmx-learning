@@ -4,21 +4,28 @@ import (
 	"fmt"
 	"net/http"
 
-	"htmx/views"
+	"htmx/pkg/route"
 )
 
 func main() {
-	http.HandleFunc("/reload", func(writer http.ResponseWriter, request *http.Request) {
-		err := views.Execute(writer, "reload.html", nil)
-		fmt.Println("ERROR:", err)
+	mux := route.NewMux()
+
+	mux.Get("/", func(ctx route.Context) error {
+		return ctx.Render("main.html", nil)
 	})
 
-	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		_ = views.Execute(writer, "main.html", nil)
+	mux.Get("/reload", func(ctx route.Context) error {
+		return ctx.Render("reload.html", nil)
+	})
+
+	mux.Get("/users/{userId}", func(ctx route.Context) error {
+		fmt.Println("USERID:", ctx.GetParam("userId"))
+		fmt.Println("Another:", ctx.GetParam("another"))
+		return nil
 	})
 
 	fmt.Println("Start HTTP on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux.GetMux()); err != nil {
 		panic(err)
 	}
 }
