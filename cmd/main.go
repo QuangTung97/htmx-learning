@@ -10,6 +10,13 @@ import (
 
 var counter atomic.Int64
 
+func disableCache(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Cache-Control", "no-store")
+		handler.ServeHTTP(writer, request)
+	})
+}
+
 func main() {
 	mux := route.NewMux()
 
@@ -36,8 +43,10 @@ func main() {
 
 	mux.GetMux().Handle(
 		"/public/*",
-		http.StripPrefix(
-			"/public/", http.FileServer(http.Dir("./public")),
+		disableCache(
+			http.StripPrefix(
+				"/public/", http.FileServer(http.Dir("./public")),
+			),
 		),
 	)
 
