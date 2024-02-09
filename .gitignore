@@ -1,6 +1,5 @@
 /.idea
 
-/views/testdata/
 /views/styles/node_modules
 
 /public/*

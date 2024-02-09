@@ -1,0 +1,25 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/public/htmx@1.9.10.js"
+            integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+            crossorigin="anonymous"></script>
+    <link href="/public/styles.css" rel="stylesheet"/>
+</head>
+<body>
+<h1>Hello World</h1>
+<div>
+    <h2>Body Test</h2>
+    <div id="reload-target">Some Span</div>
+    <button
+            class="border px-4 py-2 border-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-bold"
+            hx-get="/reload"
+            hx-target="#reload-target"
+            hx-swap="outerHTML"
+    >
+        Reload
+    </button>
+</div>
+</body>
+</html>
