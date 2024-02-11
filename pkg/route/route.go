@@ -33,6 +33,15 @@ func (c Context) Render(template string, data any) error {
 	return views.Execute(c.Writer, template, data)
 }
 
+// View ...
+func (c Context) View(template string, data any) error {
+	body, err := views.ExecuteHTML(template, data)
+	if err != nil {
+		return err
+	}
+	return views.View(c.Writer, body)
+}
+
 func (c Context) GetParam(key string) string {
 	return chi.URLParam(c.Req, key)
 }

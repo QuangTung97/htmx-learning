@@ -21,7 +21,7 @@ func main() {
 	mux := route.NewMux()
 
 	mux.Get("/", func(ctx route.Context) error {
-		return ctx.Render("main.html", nil)
+		return ctx.View("body.html", nil)
 	})
 
 	mux.Get("/reload", func(ctx route.Context) error {
@@ -31,6 +31,10 @@ func main() {
 		return ctx.Render("reload.html", tmplData{
 			Count: counter.Add(1),
 		})
+	})
+
+	mux.Get("/login", func(ctx route.Context) error {
+		return ctx.View("auth/login.html", nil)
 	})
 
 	mux.Route("/users", func(router route.Router) {
