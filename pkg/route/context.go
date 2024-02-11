@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"htmx/pkg/util"
 	"htmx/views"
 )
 
@@ -29,12 +30,8 @@ func (c Context) isHxRequest() bool {
 // View ...
 func (c Context) View(template string, data any) error {
 	if c.isHxRequest() {
-		u := c.Req.URL
-		redirectURL := u.Path
-		if len(u.Query()) > 0 {
-			redirectURL += "?" + u.Query().Encode()
-		}
-		c.Writer.Header().Set("HX-Push-Url", c.Req.URL.Path)
+		redirectURL := util.GetURLPathAndQuery(c.Req.URL)
+		c.Writer.Header().Set("HX-Push-Url", redirectURL)
 		return views.Execute(c.Writer, template, data)
 	}
 
