@@ -12,6 +12,7 @@ import (
 	"htmx/config"
 	"htmx/pkg/auth"
 	"htmx/pkg/route"
+	"htmx/views/routes"
 )
 
 var counter atomic.Int64
@@ -47,11 +48,11 @@ func main() {
 	})
 
 	mux.Get("/login", func(ctx route.Context) error {
-		return ctx.View("auth/login.html", nil)
+		return ctx.View("auth/google-login.html", nil)
 	})
 
 	authSvc := auth.ServiceLoc.Get(unv)
-	mux.Post("/oauth/login/google", func(ctx route.Context) error {
+	mux.Post(routes.OAuthGoogleLogin, func(ctx route.Context) error {
 		redirectURL := authSvc.AuthCodeURL(auth.ProviderGoogle, oauthState)
 		ctx.HXRedirect(redirectURL)
 		return nil

@@ -7,13 +7,14 @@
           crossorigin="anonymous"></script>
   <link href="/public/styles.css" rel="stylesheet"/>
 </head>
-<body>
+
+<body id="body">
 {{ .Body }}
-<script defer>
+</body>
+
+<script>
   document.body.addEventListener("htmx:sendError", function (e) {
     console.log("Send Event", e);
   });
 </script>
-
-</body>
 </html>
