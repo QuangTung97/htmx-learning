@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/QuangTung97/svloc"
+
+	"htmx/config"
+	"htmx/pkg/auth"
 	"htmx/pkg/route"
 )
 
@@ -17,7 +21,14 @@ func disableCache(handler http.Handler) http.Handler {
 	})
 }
 
+const oauthState = "some-state"
+
 func main() {
+	unv := svloc.NewUniverse()
+	config.Loc.MustOverrideFunc(unv, func(unv *svloc.Universe) config.Config {
+		return config.Load()
+	})
+
 	mux := route.NewMux()
 
 	mux.Get("/", func(ctx route.Context) error {
@@ -35,6 +46,13 @@ func main() {
 
 	mux.Get("/login", func(ctx route.Context) error {
 		return ctx.View("auth/login.html", nil)
+	})
+
+	authSvc := auth.ServiceLoc.Get(unv)
+	mux.Post("/oauth/login/google", func(ctx route.Context) error {
+		redirectURL := authSvc.AuthCodeURL(auth.ProviderGoogle, oauthState)
+		ctx.Writer.Header().Set("HX-Redirect", redirectURL)
+		return nil
 	})
 
 	mux.Route("/users", func(router route.Router) {

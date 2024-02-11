@@ -80,6 +80,28 @@ func (r Router) Get(pattern string, handler Handler) {
 	})
 }
 
+func (r Router) Post(pattern string, handler Handler) {
+	r.router.Post(pattern, func(writer http.ResponseWriter, request *http.Request) {
+		ctx := Context{
+			Ctx:    request.Context(),
+			Req:    request,
+			Writer: writer,
+		}
+
+		err := handler(ctx)
+		if err != nil {
+			writer.Header().Add("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusInternalServerError)
+			type errorResponse struct {
+				Message string `json:"message"`
+			}
+			_ = json.NewEncoder(writer).Encode(errorResponse{
+				Message: err.Error(),
+			})
+		}
+	})
+}
+
 // Route ...
 func (r Router) Route(pattern string, fn func(router Router)) {
 	r.router.Route(pattern, func(r chi.Router) {

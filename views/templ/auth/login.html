@@ -1,18 +1,21 @@
 <div class="w-full h-full flex justify-center items-center bg-gray-100">
   <div class="border-2 p-10 shadow rounded bg-white">
     <h2 class="font-bold text-3xl text-green-700 text-center mb-6">Login to HTMX</h2>
-    <form class="flex flex-col gap-4">
+    <form class="flex flex-col gap-4" hx-post="/oauth/login/google">
       <div>
         <label class="block text-green-800 font-semibold">Username:</label>
         <input
             type="text"
+            name="username"
+            value="quangtung"
             class="border shadow rounded-full px-4 py-2 outline-none focus:bg-green-50"
         />
       </div>
       <div>
         <label class="block text-green-800 font-semibold">Password:</label>
         <input
-            type="text"
+            type="password"
+            name="password"
             class="border shadow rounded-full px-4 py-2 outline-none focus:bg-green-50"
         />
       </div>
