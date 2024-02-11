@@ -1,13 +1,10 @@
 package route
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
-	"htmx/views"
 )
 
 // Router ...
@@ -19,50 +16,6 @@ type Router struct {
 type Mux struct {
 	Router
 	mux *chi.Mux
-}
-
-// Context ...
-type Context struct {
-	Ctx    context.Context
-	Req    *http.Request
-	Writer http.ResponseWriter
-}
-
-// Render ...
-func (c Context) Render(template string, data any) error {
-	return views.Execute(c.Writer, template, data)
-}
-
-func (c Context) isHxRequest() bool {
-	req := c.Req.Header.Get("HX-Request")
-	return len(req) > 0
-}
-
-// View ...
-func (c Context) View(template string, data any) error {
-	if c.isHxRequest() {
-		u := c.Req.URL
-		redirectURL := u.Path
-		if len(u.Query()) > 0 {
-			redirectURL += "?" + u.Query().Encode()
-		}
-		c.Writer.Header().Set("HX-Push-Url", c.Req.URL.Path)
-		return views.Execute(c.Writer, template, data)
-	}
-
-	body, err := views.ExecuteHTML(template, data)
-	if err != nil {
-		return err
-	}
-	return views.View(c.Writer, body)
-}
-
-func (c Context) GetParam(key string) string {
-	return chi.URLParam(c.Req, key)
-}
-
-func (c Context) HXRedirect(redirectURL string) {
-	c.Writer.Header().Set("HX-Redirect", redirectURL)
 }
 
 type Handler func(ctx Context) error
@@ -86,16 +39,7 @@ func (r Router) Get(pattern string, handler Handler) {
 		}
 
 		err := handler(ctx)
-		if err != nil {
-			writer.Header().Add("Content-Type", "application/json")
-			writer.WriteHeader(http.StatusInternalServerError)
-			type errorResponse struct {
-				Message string `json:"message"`
-			}
-			_ = json.NewEncoder(writer).Encode(errorResponse{
-				Message: err.Error(),
-			})
-		}
+		r.responseError(writer, err)
 	})
 }
 
@@ -108,16 +52,7 @@ func (r Router) Post(pattern string, handler Handler) {
 		}
 
 		err := handler(ctx)
-		if err != nil {
-			writer.Header().Add("Content-Type", "application/json")
-			writer.WriteHeader(http.StatusInternalServerError)
-			type errorResponse struct {
-				Message string `json:"message"`
-			}
-			_ = json.NewEncoder(writer).Encode(errorResponse{
-				Message: err.Error(),
-			})
-		}
+		r.responseError(writer, err)
 	})
 }
 
@@ -131,4 +66,19 @@ func (r Router) Route(pattern string, fn func(router Router)) {
 // GetMux ...
 func (m *Mux) GetMux() *chi.Mux {
 	return m.mux
+}
+
+func (Router) responseError(writer http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+
+	writer.Header().Add("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusInternalServerError)
+	type errorResponse struct {
+		Message string `json:"message"`
+	}
+	_ = json.NewEncoder(writer).Encode(errorResponse{
+		Message: err.Error(),
+	})
 }
