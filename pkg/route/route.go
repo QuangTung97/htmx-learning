@@ -46,6 +46,10 @@ func (c Context) GetParam(key string) string {
 	return chi.URLParam(c.Req, key)
 }
 
+func (c Context) HXRedirect(redirectURL string) {
+	c.Writer.Header().Set("HX-Redirect", redirectURL)
+}
+
 type Handler func(ctx Context) error
 
 func NewMux() *Mux {

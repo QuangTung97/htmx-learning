@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/QuangTung97/svloc"
@@ -18,6 +19,7 @@ const (
 
 type Service interface {
 	AuthCodeURL(provider Provider, state string) string
+	Exchange(ctx context.Context, provider Provider, code string) (*oauth2.Token, error)
 }
 
 var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
@@ -53,4 +55,8 @@ func NewService(conf config.Auth) Service {
 
 func (s *serviceImpl) AuthCodeURL(_ Provider, state string) string {
 	return s.googleConf.AuthCodeURL(state)
+}
+
+func (s *serviceImpl) Exchange(ctx context.Context, _ Provider, code string) (*oauth2.Token, error) {
+	return s.googleConf.Exchange(ctx, code)
 }
