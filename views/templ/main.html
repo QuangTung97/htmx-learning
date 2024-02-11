@@ -8,14 +8,7 @@
   <link href="/public/styles.css" rel="stylesheet"/>
 </head>
 <body>
-<h1 class="mb-2 text-2xl px-8 py-4 border-2 w-1/3 rounded-2xl shadow font-bold">Hello World</h1>
-
-{{ template "body.html" . }}
-
-<div id="modal" class="hidden">
-  {{ template "common/modal.html" . }}
-</div>
-
+{{ .Body }}
 <script defer>
   document.body.addEventListener("htmx:sendError", function (e) {
     console.log("Send Event", e);

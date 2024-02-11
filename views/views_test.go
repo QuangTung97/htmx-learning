@@ -21,8 +21,11 @@ func TestTemplate(t *testing.T) {
 		goldie.WithNameSuffix(".html"),
 	)
 
-	var buf bytes.Buffer
-	err := tmpl.ExecuteTemplate(&buf, "main.html", nil)
+	bodyHTML, err := ExecuteHTML("body.html", nil)
 	assert.Equal(t, nil, err)
-	g.Assert(t, "simple", buf.Bytes())
+
+	var buf bytes.Buffer
+	err = View(&buf, bodyHTML)
+	assert.Equal(t, nil, err)
+	g.Assert(t, "full", buf.Bytes())
 }
