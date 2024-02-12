@@ -2,19 +2,15 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="/public/htmx@1.9.10.js"
-          integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
-          crossorigin="anonymous"></script>
+  <title>HTMX Learning</title>
+  <script
+      src="/public/htmx@1.9.10.js"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+  ></script>
   <link href="/public/styles.css" rel="stylesheet"/>
+  <script src="/public/script.js" defer></script>
 </head>
-
 <body id="body">
 {{ .Body }}
 </body>
-
-<script>
-  document.body.addEventListener("htmx:sendError", function (e) {
-    console.log("Send Event", e);
-  });
-</script>
 </html>

@@ -28,7 +28,9 @@ func newServiceTest() *serviceTest {
 		rand: &RandServiceMock{},
 	}
 
-	s.svc = NewService(config.Auth{}, s.repo, s.rand)
+	s.svc = NewService(config.Auth{
+		CSRFHMACSecret: "some-secret",
+	}, s.repo, s.rand)
 	s.rand.RandStringFunc = func(size int) (string, error) {
 		return "random-string", nil
 	}
@@ -67,10 +69,11 @@ func TestService(t *testing.T) {
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
+		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": []string{
 				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
-				"csrf_token=cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNkthNnmggU2ex3L5XXeMNfxf8Wl8STcVZTxscSFEKSxa0=!abcd; Max-Age=2592000; SameSite=Strict",
+				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000; SameSite=Strict", token),
 			},
 		}, s.ht.Writer.Header())
 
@@ -115,10 +118,11 @@ func TestService(t *testing.T) {
 		assert.Equal(t, model.UserID(1234), calls[0].UserID)
 		assert.Equal(t, model.SessionID("some-session-id"), calls[0].SessionID)
 
+		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": {
 				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
-				"csrf_token=cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNkthNnmggU2ex3L5XXeMNfxf8Wl8STcVZTxscSFEKSxa0=!abcd; Max-Age=2592000; SameSite=Strict",
+				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000; SameSite=Strict", token),
 			},
 			"Location":     {"/"},
 			"Content-Type": {"text/html; charset=utf-8"},
@@ -250,7 +254,7 @@ func TestService(t *testing.T) {
 			"session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
 		)
 
-		token := "c29tZS1zZXNzaW9uLWlkITEyMzS2E2eaCBTZ7Hcvldd4w1/F/xaXxJNxVlPGxxIUQpLFrQ=="
+		token := "c2VzczoxMjM0OnNvbWUtc2Vzc2lvbi1pZCExMjM07H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		s.ht.Req.Header.Add(
 			"X-Csrf-Token",
 			token+"!1234",
@@ -281,7 +285,7 @@ func TestService(t *testing.T) {
 			"session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
 		)
 
-		token := "c29tZS1zZXNzaW9uLWlkITEyMzS2E2eaCBTZ7Hcvldd4w1/F/xaXxJNxVlPGxxIUQpLFrQ=="
+		token := "c2VzczoxMjM0OnNvbWUtc2Vzc2lvbi1pZCExMjM07H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		s.ht.Req.Header.Add(
 			"X-Csrf-Token",
 			token+"!12345",

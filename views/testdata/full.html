@@ -2,12 +2,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="/public/htmx@1.9.10.js"
-          integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
-          crossorigin="anonymous"></script>
+  <title>HTMX Learning</title>
+  <script
+      src="/public/htmx@1.9.10.js"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+  ></script>
   <link href="/public/styles.css" rel="stylesheet"/>
+  <script src="/public/script.js" defer></script>
 </head>
-
 <body id="body">
 <h1 class="mb-2 text-2xl px-8 py-4 border-2 w-1/3 rounded-2xl shadow font-bold">Hello World</h1>
 
@@ -18,7 +20,7 @@
   <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-1/3">Some Span</div>
   <button
       class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold"
-      hx-get="/reload"
+      hx-post="/reload"
       hx-target="#reload-target"
       hx-swap="outerHTML"
   >
@@ -43,10 +45,4 @@
 </div>
 
 </body>
-
-<script>
-  document.body.addEventListener("htmx:sendError", function (e) {
-    console.log("Send Event", e);
-  });
-</script>
 </html>

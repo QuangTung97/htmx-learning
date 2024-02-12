@@ -36,6 +36,9 @@ func NewService(
 	repo Repository,
 	randSvc RandService,
 ) Service {
+	if len(conf.CSRFHMACSecret) == 0 {
+		panic("Missing csrf_hmac_secret")
+	}
 	return &serviceImpl{
 		repo: repo,
 		rand: randSvc,
@@ -124,7 +127,9 @@ func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
 	return false, s.setPreSession(ctx)
 }
 
-func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessionID string) (bool, error) {
+func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie) (bool, error) {
+	sessionID := sessCookie.Value
+
 	method := ctx.Req.Method
 	if method == http.MethodGet {
 		return true, nil
@@ -157,7 +162,7 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	parts := strings.Split(sessCookie.Value, ":")
 	if parts[0] == preLoginSessionPrefix {
 		// TODO Check parts >= 2
-		return s.checkCSRFToken(ctx, parts[1])
+		return s.checkCSRFToken(ctx, sessCookie)
 	}
 
 	if len(parts) != 3 {
@@ -169,7 +174,7 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return s.redirectToHome(ctx)
 	}
 
-	continuing, _ := s.checkCSRFToken(ctx, parts[2])
+	continuing, _ := s.checkCSRFToken(ctx, sessCookie)
 	if !continuing {
 		return false, nil
 	}

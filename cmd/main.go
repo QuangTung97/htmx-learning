@@ -8,6 +8,7 @@ import (
 	"github.com/QuangTung97/svloc"
 
 	"htmx/config"
+	"htmx/pkg/auth"
 	auth_handlers "htmx/pkg/auth/handlers"
 	"htmx/pkg/route"
 )
@@ -28,12 +29,15 @@ func main() {
 	})
 
 	mux := route.NewMux()
+	mux.GetMux().Use(
+		auth.Middleware(auth.ServiceLoc.Get(unv)),
+	)
 
 	mux.Get("/", func(ctx route.Context) error {
 		return ctx.View("body.html", nil)
 	})
 
-	mux.Get("/reload", func(ctx route.Context) error {
+	mux.Post("/reload", func(ctx route.Context) error {
 		type tmplData struct {
 			Count int64
 		}
@@ -61,7 +65,7 @@ func main() {
 		),
 	)
 
-	fmt.Println("Start HTTP on :8080")
+	fmt.Println("Start HTTP on http://localhost:8080")
 	if err := http.ListenAndServe(":8080", mux.GetMux()); err != nil {
 		panic(err)
 	}

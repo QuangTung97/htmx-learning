@@ -1,3 +1,4 @@
 auth:
+  csrf_hmac_secret: some-hmac-secret
   google_client_id: google-client-id
   google_client_secret: google-client-secret

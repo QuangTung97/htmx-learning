@@ -4,4 +4,6 @@
 
 /public/*
 !/public/htmx@*.js
+!/public/script.js
+
 /config.yml
