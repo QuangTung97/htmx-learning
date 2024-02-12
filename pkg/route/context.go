@@ -10,14 +10,20 @@ import (
 	"htmx/views"
 )
 
-// Context ...
 type Context struct {
 	Ctx    context.Context
 	Req    *http.Request
 	Writer http.ResponseWriter
 }
 
-// Render ...
+func NewContext(w http.ResponseWriter, r *http.Request) Context {
+	return Context{
+		Ctx:    r.Context(),
+		Req:    r,
+		Writer: w,
+	}
+}
+
 func (c Context) Render(template string, data any) error {
 	return views.Execute(c.Writer, template, data)
 }

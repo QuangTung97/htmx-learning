@@ -39,7 +39,7 @@ func (r Router) Get(pattern string, handler Handler) {
 		}
 
 		err := handler(ctx)
-		r.responseError(writer, err)
+		ResponseError(writer, err)
 	})
 }
 
@@ -52,7 +52,7 @@ func (r Router) Post(pattern string, handler Handler) {
 		}
 
 		err := handler(ctx)
-		r.responseError(writer, err)
+		ResponseError(writer, err)
 	})
 }
 
@@ -68,7 +68,7 @@ func (m *Mux) GetMux() *chi.Mux {
 	return m.mux
 }
 
-func (Router) responseError(writer http.ResponseWriter, err error) {
+func ResponseError(writer http.ResponseWriter, err error) {
 	if err == nil {
 		return
 	}

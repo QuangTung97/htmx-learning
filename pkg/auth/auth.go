@@ -56,31 +56,31 @@ const sessionIDCookie = "session_id"
 const csrfTokenCookie = "csrf_token"
 const sessionByteSize = 32
 
-func (r *serviceImpl) newHMAC() hash.Hash {
-	return hmac.New(sha256.New, []byte(r.secretKey))
+func (s *serviceImpl) newHMAC() hash.Hash {
+	return hmac.New(sha256.New, []byte(s.secretKey))
 }
 
-func (r *serviceImpl) generateHMACSig(sessionID string, randomVal string) string {
+func (s *serviceImpl) generateHMACSig(sessionID string, randomVal string) string {
 	msg := sessionID + "!" + randomVal
-	hmacVal := r.newHMAC().Sum([]byte(msg))
+	hmacVal := s.newHMAC().Sum([]byte(msg))
 	return base64.StdEncoding.EncodeToString(hmacVal)
 }
 
-func (r *serviceImpl) computeCSRFToken(sessionID string) (string, error) {
-	randomVal, err := r.rand.RandString(16)
+func (s *serviceImpl) computeCSRFToken(sessionID string) (string, error) {
+	randomVal, err := s.rand.RandString(16)
 	if err != nil {
 		return "", err
 	}
 
-	val := r.generateHMACSig(sessionID, randomVal)
+	val := s.generateHMACSig(sessionID, randomVal)
 	csrfToken := val + "!" + randomVal
 	return csrfToken, nil
 }
 
 const preLoginSessionPrefix = "pre"
 
-func (r *serviceImpl) setPreSession(ctx route.Context) error {
-	sessID, err := r.rand.RandString(sessionByteSize)
+func (s *serviceImpl) setPreSession(ctx route.Context) error {
+	sessID, err := s.rand.RandString(sessionByteSize)
 	if err != nil {
 		return err
 	}
@@ -93,12 +93,12 @@ func (r *serviceImpl) setPreSession(ctx route.Context) error {
 		Value: sessID,
 
 		MaxAge:   maxAge,
-		Secure:   r.isProd,
+		Secure:   s.isProd,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	token, err := r.computeCSRFToken(sessID)
+	token, err := s.computeCSRFToken(sessID)
 	if err != nil {
 		return err
 	}
@@ -108,23 +108,23 @@ func (r *serviceImpl) setPreSession(ctx route.Context) error {
 		Value: token,
 
 		MaxAge:   maxAge,
-		Secure:   r.isProd,
+		Secure:   s.isProd,
 		SameSite: http.SameSiteStrictMode,
 	})
 
 	return nil
 }
 
-func (r *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
+func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
 	if ctx.IsHxRequest() {
 		ctx.HXRedirect(routes.Home)
 	} else {
 		http.Redirect(ctx.Writer, ctx.Req, routes.Home, http.StatusTemporaryRedirect)
 	}
-	return false, r.setPreSession(ctx)
+	return false, s.setPreSession(ctx)
 }
 
-func (r *serviceImpl) checkCSRFToken(ctx route.Context, sessionID string) (bool, error) {
+func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessionID string) (bool, error) {
 	method := ctx.Req.Method
 	if method == http.MethodGet {
 		return true, nil
@@ -134,22 +134,22 @@ func (r *serviceImpl) checkCSRFToken(ctx route.Context, sessionID string) (bool,
 
 	parts := strings.Split(token, "!")
 	if len(parts) != 2 {
-		return r.redirectToHome(ctx)
+		return s.redirectToHome(ctx)
 	}
 
-	compareVal := r.generateHMACSig(sessionID, parts[1])
+	compareVal := s.generateHMACSig(sessionID, parts[1])
 	if compareVal != parts[0] {
-		return r.redirectToHome(ctx)
+		return s.redirectToHome(ctx)
 	}
 
 	return true, nil
 }
 
-func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
+func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			return true, r.setPreSession(ctx)
+			return true, s.setPreSession(ctx)
 		}
 		return false, err
 	}
@@ -157,29 +157,29 @@ func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	parts := strings.Split(sessCookie.Value, ":")
 	if parts[0] == preLoginSessionPrefix {
 		// TODO Check parts >= 2
-		return r.checkCSRFToken(ctx, parts[1])
+		return s.checkCSRFToken(ctx, parts[1])
 	}
 
 	if len(parts) != 3 {
-		return r.redirectToHome(ctx)
+		return s.redirectToHome(ctx)
 	}
 
 	userID, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return r.redirectToHome(ctx)
+		return s.redirectToHome(ctx)
 	}
 
-	continuing, _ := r.checkCSRFToken(ctx, parts[2])
+	continuing, _ := s.checkCSRFToken(ctx, parts[2])
 	if !continuing {
 		return false, nil
 	}
 
-	userSess, err := r.repo.FindUserSession(ctx.Ctx, model.UserID(userID), model.SessionID(parts[2]))
+	userSess, err := s.repo.FindUserSession(ctx.Ctx, model.UserID(userID), model.SessionID(parts[2]))
 	if err != nil {
 		return false, err
 	}
 	if !userSess.Valid {
-		return r.redirectToHome(ctx)
+		return s.redirectToHome(ctx)
 	}
 
 	return true, nil
