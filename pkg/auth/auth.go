@@ -99,8 +99,26 @@ func (r *serviceImpl) setPreSession(ctx route.Context) error {
 }
 
 func (r *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
-	http.Redirect(ctx.Writer, ctx.Req, routes.Home, http.StatusTemporaryRedirect)
+	if ctx.IsHxRequest() {
+		ctx.HXRedirect(routes.Home)
+	} else {
+		http.Redirect(ctx.Writer, ctx.Req, routes.Home, http.StatusTemporaryRedirect)
+	}
 	return false, r.setPreSession(ctx)
+}
+
+func (r *serviceImpl) checkCSRFToken(ctx route.Context) (bool, error) {
+	method := ctx.Req.Method
+	if method == http.MethodGet {
+		return true, nil
+	}
+
+	_, err := ctx.Req.Cookie(csrfTokenCookie)
+	if err != nil {
+		return r.redirectToHome(ctx)
+	}
+
+	return true, nil
 }
 
 func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
@@ -114,7 +132,7 @@ func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
 
 	parts := strings.Split(sessCookie.Value, ":")
 	if parts[0] == "pre" {
-		return true, nil
+		return r.checkCSRFToken(ctx)
 	}
 
 	if len(parts) != 3 {
@@ -124,6 +142,11 @@ func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	userID, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
 		return r.redirectToHome(ctx)
+	}
+
+	continuing, _ := r.checkCSRFToken(ctx)
+	if !continuing {
+		return false, nil
 	}
 
 	userSess, err := r.repo.FindUserSession(ctx.Ctx, model.UserID(userID), model.SessionID(parts[2]))

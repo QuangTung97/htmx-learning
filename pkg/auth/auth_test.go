@@ -154,12 +154,125 @@ func TestService(t *testing.T) {
 
 		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
 	})
+
+	t.Run("req already has session, user id is not number", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewGet("/users")
+		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234a:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, false, continuing)
+		assert.Equal(t, nil, err)
+
+		calls := s.repo.FindUserSessionCalls()
+		assert.Equal(t, 0, len(calls))
+
+		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+	})
+
+	t.Run("req already has session, found user session", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewGet("/users")
+		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		s.stubFindSess(model.NullUserSession{
+			Valid: true,
+			Data: model.UserSession{
+				UserID:    1234,
+				SessionID: "some-session-id",
+			},
+		})
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, true, continuing)
+		assert.Equal(t, nil, err)
+
+		assert.Equal(t, http.Header{}, s.ht.Writer.Header())
+		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
+
+	t.Run("req already has session, not found, redirect hx", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewGet("/users")
+		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+		s.ht.Req.Header.Add("HX-Request", "true")
+
+		s.stubFindSess(model.NullUserSession{})
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, false, continuing)
+		assert.Equal(t, nil, err)
+
+		headers := s.ht.Writer.Header()
+		assert.Equal(t, 2, len(headers["Set-Cookie"]))
+		delete(headers, "Set-Cookie")
+
+		assert.Equal(t, http.Header{
+			"Hx-Redirect": {"/"},
+		}, headers)
+		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
+
+	t.Run("post, has session, without csrf_token, redirect to home", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, false, continuing)
+		assert.Equal(t, nil, err)
+
+		calls := s.repo.FindUserSessionCalls()
+		assert.Equal(t, 0, len(calls))
+
+		headers := s.ht.Writer.Header()
+		assert.Equal(t, 2, len(headers["Set-Cookie"]))
+		delete(headers, "Set-Cookie")
+
+		assert.Equal(t, http.Header{
+			"Location": {"/"},
+		}, headers)
+
+		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+	})
+
+	t.Run("post, has session, with csrf_token, success", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add(
+			"Cookie",
+			"session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
+		)
+		s.ht.Req.Header.Add("Cookie",
+			"csrf_token=cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNkthNnmggU2ex3L5XXeMNfxf8Wl8STcVZTxscSFEKSxa0=!abcd; Max-Age=2592000; SameSite=Strict",
+		)
+
+		s.stubFindSess(model.NullUserSession{
+			Valid: true,
+		})
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, true, continuing)
+		assert.Equal(t, nil, err)
+
+		calls := s.repo.FindUserSessionCalls()
+		assert.Equal(t, 1, len(calls))
+
+		headers := s.ht.Writer.Header()
+		assert.Equal(t, http.Header{}, headers)
+		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
 }
 
 func TestRandService(t *testing.T) {
 	r := &randImpl{}
 	s, err := r.RandString(32)
 	assert.Equal(t, nil, err)
-	fmt.Println(len(s))
-	fmt.Println(s)
+	fmt.Println("LEN:", len(s))
+	fmt.Println("VAL:", s)
 }

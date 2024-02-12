@@ -22,14 +22,14 @@ func (c Context) Render(template string, data any) error {
 	return views.Execute(c.Writer, template, data)
 }
 
-func (c Context) isHxRequest() bool {
+func (c Context) IsHxRequest() bool {
 	req := c.Req.Header.Get("HX-Request")
 	return len(req) > 0
 }
 
 // View ...
 func (c Context) View(template string, data any) error {
-	if c.isHxRequest() {
+	if c.IsHxRequest() {
 		redirectURL := util.GetURLPathAndQuery(c.Req.URL)
 		c.Writer.Header().Set("HX-Push-Url", redirectURL)
 		return views.Execute(c.Writer, template, data)

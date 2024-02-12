@@ -1,6 +1,7 @@
 package testhelper
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -19,6 +20,12 @@ func NewHTTPTest() *HTTPTest {
 
 func (h *HTTPTest) NewGet(urlPath string) {
 	h.Req = httptest.NewRequest(http.MethodGet, urlPath, nil)
+}
+
+func (h *HTTPTest) NewPost(urlPath string, body string) {
+	var buf bytes.Buffer
+	buf.WriteString(body)
+	h.Req = httptest.NewRequest(http.MethodPost, urlPath, &buf)
 }
 
 func (h *HTTPTest) NewResponse() *httptest.ResponseRecorder {
