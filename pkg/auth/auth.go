@@ -23,6 +23,9 @@ import (
 
 type Service interface {
 	Handle(ctx route.Context) (continuing bool, err error)
+
+	VerifyCSRFToken(ctx route.Context, token string) (bool, error)
+	SetSession(ctx route.Context) error
 }
 
 type serviceImpl struct {
@@ -191,6 +194,30 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (s *serviceImpl) verifyWithTokenAndSession(ctx route.Context, sessionID string, token string) (bool, error) {
+	parts := strings.Split(token, "!")
+	if len(parts) != 2 {
+		log.Println("[WARN] Not Found CSRF Token", ctx.Req.URL.String(), token)
+		return s.redirectToHome(ctx)
+	}
+
+	compareVal := s.generateHMACSig(sessionID, parts[1])
+	if compareVal != parts[0] {
+		log.Println("[WARN] Mismatch CSRF Token", ctx.Req.URL.String(), token)
+		return s.redirectToHome(ctx)
+	}
+
+	return false, nil
+}
+
+func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (bool, error) {
+	return false, nil
+}
+
+func (s *serviceImpl) SetSession(ctx route.Context) error {
+	return nil
 }
 
 type RandService interface {
