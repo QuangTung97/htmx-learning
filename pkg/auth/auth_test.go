@@ -72,8 +72,8 @@ func TestService(t *testing.T) {
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": []string{
-				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
-				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000; SameSite=Strict", token),
+				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly",
+				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000", token),
 			},
 		}, s.ht.Writer.Header())
 
@@ -121,8 +121,8 @@ func TestService(t *testing.T) {
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": {
-				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
-				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000; SameSite=Strict", token),
+				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly",
+				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000", token),
 			},
 			"Location":     {"/"},
 			"Content-Type": {"text/html; charset=utf-8"},

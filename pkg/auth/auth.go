@@ -6,7 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"hash"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -88,6 +90,7 @@ func (s *serviceImpl) setPreSession(ctx route.Context) error {
 		return err
 	}
 	sessID = preLoginSessionPrefix + ":" + sessID
+	fmt.Println("GENERATED Session ID")
 
 	const maxAge = 30 * 3600 * 24 // 30 days
 
@@ -98,7 +101,6 @@ func (s *serviceImpl) setPreSession(ctx route.Context) error {
 		MaxAge:   maxAge,
 		Secure:   s.isProd,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
 	})
 
 	token, err := s.computeCSRFToken(sessID)
@@ -110,9 +112,8 @@ func (s *serviceImpl) setPreSession(ctx route.Context) error {
 		Name:  csrfTokenCookie,
 		Value: token,
 
-		MaxAge:   maxAge,
-		Secure:   s.isProd,
-		SameSite: http.SameSiteStrictMode,
+		MaxAge: maxAge,
+		Secure: s.isProd,
 	})
 
 	return nil
@@ -139,11 +140,13 @@ func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie)
 
 	parts := strings.Split(token, "!")
 	if len(parts) != 2 {
+		log.Println("[WARN] Not Found CSRF Token", ctx.Req.URL.String(), token)
 		return s.redirectToHome(ctx)
 	}
 
 	compareVal := s.generateHMACSig(sessionID, parts[1])
 	if compareVal != parts[0] {
+		log.Println("[WARN] Mismatch CSRF Token", ctx.Req.URL.String(), token)
 		return s.redirectToHome(ctx)
 	}
 

@@ -3,6 +3,6 @@ package routes
 const (
 	Home = "/"
 
-	OAuthGoogleLogin = "/oauth/login/google"
+	OAuthGoogleLogin = "/login/google"
 	AuthCallback     = "/callback"
 )
