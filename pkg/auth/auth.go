@@ -7,12 +7,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/QuangTung97/svloc"
 
 	"htmx/model"
 	"htmx/pkg/route"
+	"htmx/views/routes"
 )
 
 type Service interface {
@@ -36,6 +38,13 @@ func NewService(
 		rand: randSvc,
 	}
 }
+
+var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
+	return NewService(
+		RepoLoc.Get(unv),
+		RandServiceLoc.Get(unv),
+	)
+})
 
 const sessionIDCookie = "session_id"
 const csrfTokenCookie = "csrf_token"
@@ -86,8 +95,12 @@ func (r *serviceImpl) setPreSession(ctx route.Context) error {
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	// TODO
 	return nil
+}
+
+func (r *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
+	http.Redirect(ctx.Writer, ctx.Req, routes.Home, http.StatusTemporaryRedirect)
+	return false, r.setPreSession(ctx)
 }
 
 func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
@@ -104,12 +117,21 @@ func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return true, nil
 	}
 
-	userSess, err := r.repo.FindUserSession(ctx.Ctx, 0, model.SessionID(sessCookie.Value))
+	if len(parts) != 3 {
+		return r.redirectToHome(ctx)
+	}
+
+	userID, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return r.redirectToHome(ctx)
+	}
+
+	userSess, err := r.repo.FindUserSession(ctx.Ctx, model.UserID(userID), model.SessionID(parts[2]))
 	if err != nil {
 		return false, err
 	}
 	if !userSess.Valid {
-		return false, r.setPreSession(ctx)
+		return r.redirectToHome(ctx)
 	}
 
 	return true, nil

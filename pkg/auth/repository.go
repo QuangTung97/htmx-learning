@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 
+	"github.com/QuangTung97/svloc"
+
 	"htmx/model"
 )
 
@@ -19,9 +21,9 @@ type Repository interface {
 type repoImpl struct {
 }
 
-func NewRepository() Repository {
+var RepoLoc = svloc.Register[Repository](func(unv *svloc.Universe) Repository {
 	return &repoImpl{}
-}
+})
 
 func (r *repoImpl) GetUser(ctx context.Context, userID model.UserID) (model.NullUser, error) {
 	return model.NullUser{}, nil
