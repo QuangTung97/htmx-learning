@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"htmx/config"
 	"htmx/model"
 	"htmx/pkg/testhelper"
 	"htmx/pkg/util"
@@ -27,7 +28,7 @@ func newServiceTest() *serviceTest {
 		rand: &RandServiceMock{},
 	}
 
-	s.svc = NewService(s.repo, s.rand)
+	s.svc = NewService(config.Auth{}, s.repo, s.rand)
 	s.rand.RandStringFunc = func(size int) (string, error) {
 		return "random-string", nil
 	}
@@ -248,8 +249,11 @@ func TestService(t *testing.T) {
 			"Cookie",
 			"session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
 		)
-		s.ht.Req.Header.Add("Cookie",
-			"csrf_token=cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNkthNnmggU2ex3L5XXeMNfxf8Wl8STcVZTxscSFEKSxa0=!abcd; Max-Age=2592000; SameSite=Strict",
+
+		token := "c29tZS1zZXNzaW9uLWlkITEyMzS2E2eaCBTZ7Hcvldd4w1/F/xaXxJNxVlPGxxIUQpLFrQ=="
+		s.ht.Req.Header.Add(
+			"X-Csrf-Token",
+			token+"!1234",
 		)
 
 		s.stubFindSess(model.NullUserSession{
@@ -266,6 +270,31 @@ func TestService(t *testing.T) {
 		headers := s.ht.Writer.Header()
 		assert.Equal(t, http.Header{}, headers)
 		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
+
+	t.Run("post, has session, with csrf_token, mismatch hmac", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add(
+			"Cookie",
+			"session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict",
+		)
+
+		token := "c29tZS1zZXNzaW9uLWlkITEyMzS2E2eaCBTZ7Hcvldd4w1/F/xaXxJNxVlPGxxIUQpLFrQ=="
+		s.ht.Req.Header.Add(
+			"X-Csrf-Token",
+			token+"!12345",
+		)
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, false, continuing)
+		assert.Equal(t, nil, err)
+
+		calls := s.repo.FindUserSessionCalls()
+		assert.Equal(t, 0, len(calls))
+
+		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
 	})
 }
 

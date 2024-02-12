@@ -9,10 +9,13 @@ import (
 )
 
 type Config struct {
-	Auth Auth `mapstructure:"auth"`
+	Env  string `mapstructure:"env"`
+	Auth Auth   `mapstructure:"auth"`
 }
 
 type Auth struct {
+	CSRFHMACSecret string `mapstructure:"csrf_hmac_secret"`
+
 	GoogleClientID     string `mapstructure:"google_client_id"`
 	GoogleClientSecret string `mapstructure:"google_client_secret"`
 }
@@ -25,6 +28,10 @@ func Load() Config {
 	vip.AddConfigPath(".")
 	return loadConfig(vip)
 }
+
+var IsProdLoc = svloc.Register[bool](func(unv *svloc.Universe) bool {
+	return Loc.Get(unv).Env == "production"
+})
 
 var Loc = svloc.RegisterEmpty[Config]()
 
