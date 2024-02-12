@@ -38,7 +38,7 @@ func Register(unv *svloc.Universe, mux *route.Mux) {
 		return ctx.View("auth/google-login.html", nil)
 	})
 
-	authSvc := auth.ServiceLoc.Get(unv)
+	authSvc := auth.OAuthServiceLoc.Get(unv)
 
 	mux.Post(routes.OAuthGoogleLogin, func(ctx route.Context) error {
 		redirectURL := authSvc.AuthCodeURL(auth.ProviderGoogle, oauthState)

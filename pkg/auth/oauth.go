@@ -17,22 +17,22 @@ const (
 	ProviderGoogle Provider = "google"
 )
 
-type Service interface {
+type OAuthService interface {
 	AuthCodeURL(provider Provider, state string) string
 	Exchange(ctx context.Context, provider Provider, code string) (*oauth2.Token, error)
 }
 
-var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
-	return NewService(
+var OAuthServiceLoc = svloc.Register[OAuthService](func(unv *svloc.Universe) OAuthService {
+	return NewOAuthService(
 		config.Loc.Get(unv).Auth,
 	)
 })
 
-type serviceImpl struct {
+type oauthServiceImpl struct {
 	googleConf *oauth2.Config
 }
 
-func NewService(conf config.Auth) Service {
+func NewOAuthService(conf config.Auth) OAuthService {
 	scopes := []string{
 		"openid",
 		"https://www.googleapis.com/auth/userinfo.email",
@@ -48,15 +48,15 @@ func NewService(conf config.Auth) Service {
 		Endpoint:     google.Endpoint,
 	}
 
-	return &serviceImpl{
+	return &oauthServiceImpl{
 		googleConf: googleConf,
 	}
 }
 
-func (s *serviceImpl) AuthCodeURL(_ Provider, state string) string {
+func (s *oauthServiceImpl) AuthCodeURL(_ Provider, state string) string {
 	return s.googleConf.AuthCodeURL(state)
 }
 
-func (s *serviceImpl) Exchange(ctx context.Context, _ Provider, code string) (*oauth2.Token, error) {
+func (s *oauthServiceImpl) Exchange(ctx context.Context, _ Provider, code string) (*oauth2.Token, error) {
 	return s.googleConf.Exchange(ctx, code)
 }

@@ -7,16 +7,19 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/http"
+	"strings"
+
+	"github.com/QuangTung97/svloc"
 
 	"htmx/model"
 	"htmx/pkg/route"
 )
 
-type CSRFService interface {
+type Service interface {
 	Handle(ctx route.Context) (continuing bool, err error)
 }
 
-type csrfServiceImpl struct {
+type serviceImpl struct {
 	repo Repository
 	rand RandService
 
@@ -24,11 +27,13 @@ type csrfServiceImpl struct {
 	secretKey string
 }
 
-func NewCSRFService(
+func NewService(
 	repo Repository,
-) CSRFService {
-	return &csrfServiceImpl{
+	randSvc RandService,
+) Service {
+	return &serviceImpl{
 		repo: repo,
+		rand: randSvc,
 	}
 }
 
@@ -36,7 +41,7 @@ const sessionIDCookie = "session_id"
 const csrfTokenCookie = "csrf_token"
 const sessionByteSize = 32
 
-func (r *csrfServiceImpl) computeCSRFToken(sessionID string) (string, error) {
+func (r *serviceImpl) computeCSRFToken(sessionID string) (string, error) {
 	randomVal, err := r.rand.RandString(16)
 	if err != nil {
 		return "", err
@@ -48,11 +53,12 @@ func (r *csrfServiceImpl) computeCSRFToken(sessionID string) (string, error) {
 	return csrfToken, nil
 }
 
-func (r *csrfServiceImpl) setPreSession(ctx route.Context) error {
+func (r *serviceImpl) setPreSession(ctx route.Context) error {
 	sessID, err := r.rand.RandString(sessionByteSize)
 	if err != nil {
 		return err
 	}
+	sessID = "pre:" + sessID
 
 	const maxAge = 30 * 3600 * 24 // 30 days
 
@@ -84,16 +90,21 @@ func (r *csrfServiceImpl) setPreSession(ctx route.Context) error {
 	return nil
 }
 
-func (r *csrfServiceImpl) Handle(ctx route.Context) (bool, error) {
-	sessCookie, err := ctx.Req.Cookie("session_id")
+func (r *serviceImpl) Handle(ctx route.Context) (bool, error) {
+	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			return false, r.setPreSession(ctx)
+			return true, r.setPreSession(ctx)
 		}
 		return false, err
 	}
 
-	userSess, err := r.repo.FindUserSession(ctx.Ctx, model.SessionID(sessCookie.Value))
+	parts := strings.Split(sessCookie.Value, ":")
+	if parts[0] == "pre" {
+		return true, nil
+	}
+
+	userSess, err := r.repo.FindUserSession(ctx.Ctx, 0, model.SessionID(sessCookie.Value))
 	if err != nil {
 		return false, err
 	}
@@ -108,9 +119,9 @@ type RandService interface {
 	RandString(size int) (string, error)
 }
 
-func NewRandService() RandService {
+var RandServiceLoc = svloc.Register[RandService](func(unv *svloc.Universe) RandService {
 	return &randImpl{}
-}
+})
 
 type randImpl struct {
 }

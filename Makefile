@@ -1,4 +1,4 @@
-.PHONY: test test-update build-css run
+.PHONY: test test-update build-css run install-tools
 
 test:
 	go test ./...
@@ -11,3 +11,7 @@ build-css:
 
 run:
 	go run cmd/main.go
+
+install-tools:
+	go install github.com/matryer/moq
+	go install github.com/mgechev/revive

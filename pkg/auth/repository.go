@@ -6,9 +6,11 @@ import (
 	"htmx/model"
 )
 
+//go:generate moq -out repository_mocks_test.go . Repository RandService
+
 type Repository interface {
 	GetUser(ctx context.Context, userID model.UserID) (model.NullUser, error)
-	FindUserSession(ctx context.Context, sessionID model.SessionID) (model.NullUserSession, error)
+	FindUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) (model.NullUserSession, error)
 
 	InsertUser(ctx context.Context, user model.User) (model.UserID, error)
 	InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error
@@ -26,7 +28,7 @@ func (r *repoImpl) GetUser(ctx context.Context, userID model.UserID) (model.Null
 }
 
 func (r *repoImpl) FindUserSession(
-	ctx context.Context, sessionID model.SessionID,
+	ctx context.Context, userID model.UserID, sessionID model.SessionID,
 ) (model.NullUserSession, error) {
 	return model.NullUserSession{}, nil
 }
