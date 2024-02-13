@@ -29,7 +29,9 @@ func getCurrentURLPath(ctx route.Context) string {
 	return util.GetURLPathAndQuery(u)
 }
 
-func Register(unv *svloc.Universe, mux *route.Mux) {
+func Register(unv *svloc.Universe) {
+	mux := route.MuxLoc.Get(unv)
+
 	mux.Get("/login", func(ctx route.Context) error {
 		newURL := ctx.Req.URL
 		newURL.RawQuery += "backUrl=" + url.QueryEscape(getCurrentURLPath(ctx))
@@ -42,7 +44,7 @@ func Register(unv *svloc.Universe, mux *route.Mux) {
 
 	mux.Post(routes.OAuthGoogleLogin, func(ctx route.Context) error {
 		redirectURL := authSvc.AuthCodeURL(auth.ProviderGoogle, oauthState)
-		ctx.HXRedirect(redirectURL)
+		ctx.Redirect(redirectURL)
 		return nil
 	})
 

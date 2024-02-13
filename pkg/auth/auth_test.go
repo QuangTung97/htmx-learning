@@ -10,6 +10,7 @@ import (
 
 	"htmx/config"
 	"htmx/model"
+	"htmx/pkg/route"
 	"htmx/pkg/testhelper"
 	"htmx/pkg/util"
 )
@@ -19,6 +20,8 @@ type serviceTest struct {
 	repo *RepositoryMock
 	rand *RandServiceMock
 	svc  Service
+
+	errorView *route.ErrorViewMock
 }
 
 func newServiceTest() *serviceTest {
@@ -26,11 +29,16 @@ func newServiceTest() *serviceTest {
 		ht:   testhelper.NewHTTPTest(),
 		repo: &RepositoryMock{},
 		rand: &RandServiceMock{},
+
+		errorView: &route.ErrorViewMock{},
 	}
 
-	s.svc = NewService(config.Auth{
-		CSRFHMACSecret: "some-secret",
-	}, s.repo, s.rand)
+	s.svc = NewService(
+		config.Auth{
+			CSRFHMACSecret: "some-secret",
+		},
+		s.repo, s.rand, s.errorView,
+	)
 	s.rand.RandStringFunc = func(size int) (string, error) {
 		return "random-string", nil
 	}

@@ -28,7 +28,8 @@ func main() {
 		return config.Load()
 	})
 
-	mux := route.NewMux()
+	mux := route.MuxLoc.Get(unv)
+
 	mux.GetMux().Use(
 		auth.Middleware(auth.ServiceLoc.Get(unv)),
 	)
@@ -46,7 +47,7 @@ func main() {
 		})
 	})
 
-	auth_handlers.Register(unv, mux)
+	auth_handlers.Register(unv)
 
 	mux.Route("/users", func(router route.Router) {
 		router.Get("/{userId}", func(ctx route.Context) error {

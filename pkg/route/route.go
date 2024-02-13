@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/QuangTung97/svloc"
 	"github.com/go-chi/chi/v5"
+
+	"htmx/views/routes"
 )
 
 // Router ...
@@ -18,10 +21,19 @@ type Mux struct {
 	mux *chi.Mux
 }
 
+var MuxLoc = svloc.Register[*Mux](func(unv *svloc.Universe) *Mux {
+	return NewMux(ErrorViewLoc.Get(unv))
+})
+
 type Handler func(ctx Context) error
 
-func NewMux() *Mux {
+func NewMux(errorView ErrorView) *Mux {
 	r := chi.NewRouter()
+
+	r.Get(routes.Error, func(writer http.ResponseWriter, request *http.Request) {
+		errorView.Render(NewContext(writer, request))
+	})
+
 	return &Mux{
 		Router: Router{
 			router: r,

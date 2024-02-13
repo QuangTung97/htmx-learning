@@ -1,7 +1,8 @@
 package routes
 
 const (
-	Home = "/"
+	Home  = "/"
+	Error = "/error"
 
 	OAuthGoogleLogin = "/login/google"
 	AuthCallback     = "/callback"

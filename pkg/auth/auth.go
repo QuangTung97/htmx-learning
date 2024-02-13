@@ -32,6 +32,8 @@ type serviceImpl struct {
 	repo Repository
 	rand RandService
 
+	errorView route.ErrorView
+
 	isProd    bool
 	secretKey string
 }
@@ -40,6 +42,7 @@ func NewService(
 	conf config.Auth,
 	repo Repository,
 	randSvc RandService,
+	errorView route.ErrorView,
 ) Service {
 	if len(conf.CSRFHMACSecret) == 0 {
 		panic("Missing csrf_hmac_secret")
@@ -47,6 +50,8 @@ func NewService(
 	return &serviceImpl{
 		repo: repo,
 		rand: randSvc,
+
+		errorView: errorView,
 
 		secretKey: conf.CSRFHMACSecret,
 	}
@@ -57,6 +62,7 @@ var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
 		config.Loc.Get(unv).Auth,
 		RepoLoc.Get(unv),
 		RandServiceLoc.Get(unv),
+		route.ErrorViewLoc.Get(unv),
 	)
 })
 
@@ -128,11 +134,7 @@ func (s *serviceImpl) setSessionCookie(ctx route.Context, sessID string) error {
 }
 
 func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
-	if ctx.IsHxRequest() {
-		ctx.HXRedirect(routes.Home)
-	} else {
-		http.Redirect(ctx.Writer, ctx.Req, routes.Home, http.StatusTemporaryRedirect)
-	}
+	ctx.Redirect(routes.Home)
 	return false, s.setPreSession(ctx)
 }
 

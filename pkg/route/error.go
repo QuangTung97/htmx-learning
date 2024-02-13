@@ -2,15 +2,19 @@ package route
 
 import (
 	"fmt"
-	"log"
+	"net/http"
+	"net/url"
 
 	"github.com/QuangTung97/svloc"
 
 	"htmx/views/routes"
 )
 
+//go:generate moq -rm -out error_mocks.go . ErrorView
+
 type ErrorView interface {
-	Render(ctx Context, err error)
+	Render(ctx Context)
+	Redirect(ctx Context, err error)
 }
 
 var ErrorViewLoc = svloc.Register[ErrorView](func(unv *svloc.Universe) ErrorView {
@@ -20,21 +24,32 @@ var ErrorViewLoc = svloc.Register[ErrorView](func(unv *svloc.Universe) ErrorView
 type errorViewImpl struct {
 }
 
-func (v *errorViewImpl) Render(ctx Context, err error) {
+func (v *errorViewImpl) Redirect(ctx Context, err error) {
+	errorURL := routes.Error + "?msg=" + url.QueryEscape(err.Error())
+
+	if !ctx.HasHxRequestHeader() {
+		http.Redirect(ctx.Writer, ctx.Req, errorURL, http.StatusTemporaryRedirect)
+		return
+	}
+	v.renderWithMsg(ctx, err.Error())
+
+	ctx.Writer.Header().Set("Hx-Reswap", "innerHTML")
+	ctx.Writer.Header().Set("Hx-Retarget", "#body")
+	ctx.Writer.Header().Set("Hx-Push-Url", errorURL)
+}
+
+func (v *errorViewImpl) renderWithMsg(ctx Context, msg string) {
 	type templateData struct {
 		HomeURL string
 		Text    string
 	}
-	newErr := ctx.View("common/error.html", templateData{
+	_ = ctx.View("common/error.html", templateData{
 		HomeURL: routes.Home,
-		Text:    fmt.Sprintf("Error: %s", err.Error()),
+		Text:    fmt.Sprintf("Error: %s", msg),
 	})
-	if newErr != nil {
-		log.Println("[ERROR]", newErr)
-	}
+}
 
-	if ctx.IsHxRequest() {
-		ctx.Writer.Header().Set("Hx-Reswap", "innerHTML")
-		ctx.Writer.Header().Set("Hx-Retarget", "#body")
-	}
+func (v *errorViewImpl) Render(ctx Context) {
+	msg := ctx.Req.URL.Query().Get("msg")
+	v.renderWithMsg(ctx, msg)
 }

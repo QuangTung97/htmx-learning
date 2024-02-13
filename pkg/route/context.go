@@ -28,9 +28,16 @@ func (c Context) Render(template string, data any) error {
 	return views.Execute(c.Writer, template, data)
 }
 
-func (c Context) IsHxRequest() bool {
+func (c Context) HasHxRequestHeader() bool {
 	req := c.Req.Header.Get("HX-Request")
 	if len(req) == 0 {
+		return false
+	}
+	return true
+}
+
+func (c Context) IsHxRequest() bool {
+	if !c.HasHxRequestHeader() {
 		return false
 	}
 
@@ -61,6 +68,10 @@ func (c Context) GetParam(key string) string {
 	return chi.URLParam(c.Req, key)
 }
 
-func (c Context) HXRedirect(redirectURL string) {
-	c.Writer.Header().Set("HX-Redirect", redirectURL)
+func (c Context) Redirect(toURL string) {
+	if c.HasHxRequestHeader() {
+		c.Writer.Header().Set("HX-Redirect", toURL)
+		return
+	}
+	http.Redirect(c.Writer, c.Req, toURL, http.StatusTemporaryRedirect)
 }
