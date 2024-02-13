@@ -30,7 +30,16 @@ func (c Context) Render(template string, data any) error {
 
 func (c Context) IsHxRequest() bool {
 	req := c.Req.Header.Get("HX-Request")
-	return len(req) > 0
+	if len(req) == 0 {
+		return false
+	}
+
+	boosted := c.Req.Header.Get("HX-Boosted")
+	if len(boosted) > 0 {
+		return false
+	}
+
+	return true
 }
 
 // View ...

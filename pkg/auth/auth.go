@@ -25,7 +25,7 @@ type Service interface {
 	Handle(ctx route.Context) (continuing bool, err error)
 
 	VerifyCSRFToken(ctx route.Context, token string) (bool, error)
-	SetSession(ctx route.Context) error
+	SetSession(ctx route.Context, sess model.UserSession) error
 }
 
 type serviceImpl struct {
@@ -62,7 +62,7 @@ var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
 
 const sessionIDCookie = "session_id"
 const csrfTokenCookie = "csrf_token"
-const sessionByteSize = 32
+const SessionByteSize = 32
 
 func (s *serviceImpl) newHMAC() hash.Hash {
 	return hmac.New(sha256.New, []byte(s.secretKey))
@@ -86,15 +86,20 @@ func (s *serviceImpl) computeCSRFToken(sessionID string) (string, error) {
 }
 
 const preLoginSessionPrefix = "pre"
+const sessionPrefix = "sess"
 
 func (s *serviceImpl) setPreSession(ctx route.Context) error {
-	sessID, err := s.rand.RandString(sessionByteSize)
+	sessID, err := s.rand.RandString(SessionByteSize)
 	if err != nil {
 		return err
 	}
 	sessID = preLoginSessionPrefix + ":" + sessID
-	fmt.Println("GENERATED Session ID")
+	fmt.Println("Generated Pre-Login Session ID")
 
+	return s.setSessionCookie(ctx, sessID)
+}
+
+func (s *serviceImpl) setSessionCookie(ctx route.Context, sessID string) error {
 	const maxAge = 30 * 3600 * 24 // 30 days
 
 	http.SetCookie(ctx.Writer, &http.Cookie{
@@ -132,18 +137,21 @@ func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
 }
 
 func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie) (bool, error) {
-	sessionID := sessCookie.Value
-
 	method := ctx.Req.Method
 	if method == http.MethodGet {
 		return true, nil
 	}
 
+	sessionID := sessCookie.Value
 	token := ctx.Req.Header.Get("X-Csrf-Token")
 
+	return s.verifyTokenWithSession(ctx, sessionID, token)
+}
+
+func (s *serviceImpl) verifyTokenWithSession(ctx route.Context, sessionID string, token string) (bool, error) {
 	parts := strings.Split(token, "!")
 	if len(parts) != 2 {
-		log.Println("[WARN] Not Found CSRF Token", ctx.Req.URL.String(), token)
+		log.Println("[WARN] Invalid CSRF Token", ctx.Req.URL.String(), token)
 		return s.redirectToHome(ctx)
 	}
 
@@ -167,7 +175,6 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 
 	parts := strings.Split(sessCookie.Value, ":")
 	if parts[0] == preLoginSessionPrefix {
-		// TODO Check parts >= 2
 		return s.checkCSRFToken(ctx, sessCookie)
 	}
 
@@ -196,28 +203,20 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	return true, nil
 }
 
-func (s *serviceImpl) verifyWithTokenAndSession(ctx route.Context, sessionID string, token string) (bool, error) {
-	parts := strings.Split(token, "!")
-	if len(parts) != 2 {
-		log.Println("[WARN] Not Found CSRF Token", ctx.Req.URL.String(), token)
-		return s.redirectToHome(ctx)
+func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool, err error) {
+	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return false, s.setPreSession(ctx)
+		}
+		return false, err
 	}
-
-	compareVal := s.generateHMACSig(sessionID, parts[1])
-	if compareVal != parts[0] {
-		log.Println("[WARN] Mismatch CSRF Token", ctx.Req.URL.String(), token)
-		return s.redirectToHome(ctx)
-	}
-
-	return false, nil
+	return s.verifyTokenWithSession(ctx, sessCookie.Value, token)
 }
 
-func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (bool, error) {
-	return false, nil
-}
-
-func (s *serviceImpl) SetSession(ctx route.Context) error {
-	return nil
+func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) error {
+	sessID := fmt.Sprintf("%s:%d:%s", sessionPrefix, sess.UserID, sess.SessionID)
+	return s.setSessionCookie(ctx, sessID)
 }
 
 type RandService interface {

@@ -1,0 +1,10 @@
+<div class="w-full h-full flex justify-center items-center bg-gray-100">
+  <div class="px-16 py-8 bg-white border shadow flex items-center flex-col justify-center rounded-2xl">
+    <h2 class="text-red-800 font-bold text-2xl mb-8 mt-4 max-w-96">{{ .Text }}</h2>
+    <a
+        href="{{ .HomeURL }}"
+        hx-boost="true"
+        class="block rounded-full text-xl font-bold hover:bg-green-600 bg-green-700 px-8 py-2 text-white"
+    >Home</a>
+  </div>
+</div>

@@ -96,6 +96,21 @@ func TestService(t *testing.T) {
 		assert.Equal(t, http.Header{}, s.ht.Writer.Header())
 	})
 
+	t.Run("pre session is missing parts", func(t *testing.T) {
+		s := newServiceTest()
+
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add("Cookie", "session_id=pre; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		continuing, err := s.svc.Handle(s.ht.NewContext())
+		assert.Equal(t, false, continuing)
+		assert.Equal(t, nil, err)
+
+		headers := s.ht.Writer.Header()
+		_, ok := headers["Set-Cookie"]
+		assert.Equal(t, true, ok)
+	})
+
 	t.Run("req already has session, call find user session not found", func(t *testing.T) {
 		s := newServiceTest()
 
@@ -297,6 +312,58 @@ func TestService(t *testing.T) {
 
 		calls := s.repo.FindUserSessionCalls()
 		assert.Equal(t, 0, len(calls))
+
+		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+	})
+}
+
+func TestService_Verify_Token(t *testing.T) {
+	t.Run("without cookie", func(t *testing.T) {
+		s := newServiceTest()
+		s.ht.NewPost("/users", "")
+
+		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), "")
+		assert.Equal(t, false, ok)
+		assert.Equal(t, nil, err)
+
+		headers := s.ht.Writer.Header()
+		_, exist := headers["Set-Cookie"]
+		assert.Equal(t, true, exist)
+
+		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
+
+	t.Run("with cookie and correct token", func(t *testing.T) {
+		s := newServiceTest()
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add("Cookie", "session_id=pre:some-session-id")
+
+		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo=!abcd"
+
+		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
+		assert.Equal(t, true, ok)
+		assert.Equal(t, nil, err)
+
+		headers := s.ht.Writer.Header()
+		assert.Equal(t, http.Header{}, headers)
+
+		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+	})
+
+	t.Run("with cookie and invalid token", func(t *testing.T) {
+		s := newServiceTest()
+		s.ht.NewPost("/users", "")
+		s.ht.Req.Header.Add("Cookie", "session_id=pre:some-session-id")
+
+		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo=!abcde"
+
+		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
+		assert.Equal(t, false, ok)
+		assert.Equal(t, nil, err)
+
+		headers := s.ht.Writer.Header()
+		_, existed := headers["Set-Cookie"]
+		assert.Equal(t, true, existed)
 
 		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
 	})
