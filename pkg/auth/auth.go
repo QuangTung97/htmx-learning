@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,8 +23,8 @@ import (
 type Service interface {
 	Handle(ctx route.Context) (continuing bool, err error)
 
-	VerifyCSRFToken(ctx route.Context, token string) (bool, error)
-	SetSession(ctx route.Context, sess model.UserSession) error
+	VerifyCSRFToken(ctx route.Context, token string) bool
+	SetSession(ctx route.Context, sess model.UserSession)
 }
 
 type serviceImpl struct {
@@ -138,10 +137,16 @@ func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
 	return false, s.setPreSession(ctx)
 }
 
-func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie) (bool, error) {
+func (s *serviceImpl) redirectToError(ctx route.Context, err error) bool {
+	s.errorView.Redirect(ctx, err)
+	_ = s.setPreSession(ctx)
+	return false
+}
+
+func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie) bool {
 	method := ctx.Req.Method
 	if method == http.MethodGet {
-		return true, nil
+		return true
 	}
 
 	sessionID := sessCookie.Value
@@ -150,20 +155,18 @@ func (s *serviceImpl) checkCSRFToken(ctx route.Context, sessCookie *http.Cookie)
 	return s.verifyTokenWithSession(ctx, sessionID, token)
 }
 
-func (s *serviceImpl) verifyTokenWithSession(ctx route.Context, sessionID string, token string) (bool, error) {
+func (s *serviceImpl) verifyTokenWithSession(ctx route.Context, sessionID string, token string) bool {
 	parts := strings.Split(token, "!")
 	if len(parts) != 2 {
-		log.Println("[WARN] Invalid CSRF Token", ctx.Req.URL.String(), token)
-		return s.redirectToHome(ctx)
+		return s.redirectToError(ctx, errors.New("invalid csrf token"))
 	}
 
 	compareVal := s.generateHMACSig(sessionID, parts[1])
 	if compareVal != parts[0] {
-		log.Println("[WARN] Mismatch CSRF Token", ctx.Req.URL.String(), token)
-		return s.redirectToHome(ctx)
+		return s.redirectToError(ctx, errors.New("mismatch csrf token"))
 	}
 
-	return true, nil
+	return true
 }
 
 func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
@@ -177,7 +180,7 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 
 	parts := strings.Split(sessCookie.Value, ":")
 	if parts[0] == preLoginSessionPrefix {
-		return s.checkCSRFToken(ctx, sessCookie)
+		return s.checkCSRFToken(ctx, sessCookie), nil
 	}
 
 	if len(parts) != 3 {
@@ -189,7 +192,7 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return s.redirectToHome(ctx)
 	}
 
-	continuing, _ := s.checkCSRFToken(ctx, sessCookie)
+	continuing := s.checkCSRFToken(ctx, sessCookie)
 	if !continuing {
 		return false, nil
 	}
@@ -205,20 +208,23 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	return true, nil
 }
 
-func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool, err error) {
+func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool) {
 	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			return false, s.setPreSession(ctx)
+			return s.redirectToError(ctx, errors.New("no session id when verify csrf token"))
 		}
-		return false, err
+		return s.redirectToError(ctx, err)
 	}
 	return s.verifyTokenWithSession(ctx, sessCookie.Value, token)
 }
 
-func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) error {
+func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) {
 	sessID := fmt.Sprintf("%s:%d:%s", sessionPrefix, sess.UserID, sess.SessionID)
-	return s.setSessionCookie(ctx, sessID)
+	err := s.setSessionCookie(ctx, sessID)
+	if err != nil {
+		s.errorView.Redirect(ctx, err)
+	}
 }
 
 type RandService interface {

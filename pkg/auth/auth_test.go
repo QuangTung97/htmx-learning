@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -48,6 +49,10 @@ func newServiceTest() *serviceTest {
 	return s
 }
 
+func (s *serviceTest) stubRedirect() {
+	s.errorView.RedirectFunc = func(ctx route.Context, err error) {}
+}
+
 func (s *serviceTest) stubRand(values ...string) {
 	s.rand.RandStringFunc = func(size int) (string, error) {
 		index := len(s.rand.RandStringCalls()) - 1
@@ -61,6 +66,12 @@ func (s *serviceTest) stubFindSess(sess model.NullUserSession) {
 	) (util.Null[model.UserSession], error) {
 		return sess, nil
 	}
+}
+
+func (s *serviceTest) assertRedirectErr(t *testing.T, err error) {
+	calls := s.errorView.RedirectCalls()
+	assert.Equal(t, 1, len(calls))
+	assert.Equal(t, err, calls[0].Err)
 }
 
 func TestService(t *testing.T) {
@@ -110,6 +121,8 @@ func TestService(t *testing.T) {
 		s.ht.NewPost("/users", "")
 		s.ht.Req.Header.Add("Cookie", "session_id=pre; Max-Age=2592000; HttpOnly; SameSite=Strict")
 
+		s.stubRedirect()
+
 		continuing, err := s.svc.Handle(s.ht.NewContext())
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
@@ -117,6 +130,8 @@ func TestService(t *testing.T) {
 		headers := s.ht.Writer.Header()
 		_, ok := headers["Set-Cookie"]
 		assert.Equal(t, true, ok)
+
+		s.assertRedirectErr(t, errors.New("invalid csrf token"))
 	})
 
 	t.Run("req already has session, call find user session not found", func(t *testing.T) {
@@ -244,11 +259,13 @@ func TestService(t *testing.T) {
 		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
 	})
 
-	t.Run("post, has session, without csrf_token, redirect to home", func(t *testing.T) {
+	t.Run("post, has session, without csrf_token, redirect to error", func(t *testing.T) {
 		s := newServiceTest()
 
 		s.ht.NewPost("/users", "")
 		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		s.stubRedirect()
 
 		continuing, err := s.svc.Handle(s.ht.NewContext())
 		assert.Equal(t, false, continuing)
@@ -261,11 +278,7 @@ func TestService(t *testing.T) {
 		assert.Equal(t, 2, len(headers["Set-Cookie"]))
 		delete(headers, "Set-Cookie")
 
-		assert.Equal(t, http.Header{
-			"Location": {"/"},
-		}, headers)
-
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("invalid csrf token"))
 	})
 
 	t.Run("post, has session, with csrf_token, success", func(t *testing.T) {
@@ -314,6 +327,8 @@ func TestService(t *testing.T) {
 			token+"!12345",
 		)
 
+		s.stubRedirect()
+
 		continuing, err := s.svc.Handle(s.ht.NewContext())
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
@@ -321,7 +336,7 @@ func TestService(t *testing.T) {
 		calls := s.repo.FindUserSessionCalls()
 		assert.Equal(t, 0, len(calls))
 
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("mismatch csrf token"))
 	})
 }
 
@@ -330,15 +345,16 @@ func TestService_Verify_Token(t *testing.T) {
 		s := newServiceTest()
 		s.ht.NewPost("/users", "")
 
-		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), "")
+		s.stubRedirect()
+
+		ok := s.svc.VerifyCSRFToken(s.ht.NewContext(), "")
 		assert.Equal(t, false, ok)
-		assert.Equal(t, nil, err)
 
 		headers := s.ht.Writer.Header()
 		_, exist := headers["Set-Cookie"]
 		assert.Equal(t, true, exist)
 
-		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("no session id when verify csrf token"))
 	})
 
 	t.Run("with cookie and correct token", func(t *testing.T) {
@@ -348,9 +364,8 @@ func TestService_Verify_Token(t *testing.T) {
 
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo=!abcd"
 
-		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
+		ok := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
 		assert.Equal(t, true, ok)
-		assert.Equal(t, nil, err)
 
 		headers := s.ht.Writer.Header()
 		assert.Equal(t, http.Header{}, headers)
@@ -365,15 +380,16 @@ func TestService_Verify_Token(t *testing.T) {
 
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo=!abcde"
 
-		ok, err := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
+		s.stubRedirect()
+
+		ok := s.svc.VerifyCSRFToken(s.ht.NewContext(), token)
 		assert.Equal(t, false, ok)
-		assert.Equal(t, nil, err)
 
 		headers := s.ht.Writer.Header()
 		_, existed := headers["Set-Cookie"]
 		assert.Equal(t, true, existed)
 
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("mismatch csrf token"))
 	})
 }
 
