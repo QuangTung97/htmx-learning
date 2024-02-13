@@ -18,6 +18,7 @@ var ErrDuplicatedUser = errors.New("duplicated user")
 type Repository interface {
 	GetUser(ctx context.Context, userID model.UserID) (model.NullUser, error)
 	FindUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) (model.NullUserSession, error)
+	FindUser(ctx context.Context, provider string, oauthUserID string) (model.NullUser, error)
 
 	InsertUser(ctx context.Context, user model.User) (model.UserID, error)
 	InsertUserSession(ctx context.Context, sess model.UserSession) error
@@ -36,6 +37,14 @@ SELECT id, provider, oauth_user_id, email, image_url, status
 FROM users WHERE id = ?
 `
 	return dblib.Get[model.User](ctx, query, userID)
+}
+
+func (r *repoImpl) FindUser(ctx context.Context, provider string, oauthUserID string) (model.NullUser, error) {
+	query := `
+SELECT id, provider, oauth_user_id, email, image_url, status
+FROM users WHERE provider = ? AND oauth_user_id = ?
+`
+	return dblib.Get[model.User](ctx, query, provider, oauthUserID)
 }
 
 func (r *repoImpl) FindUserSession(

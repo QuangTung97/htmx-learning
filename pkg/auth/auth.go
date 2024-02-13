@@ -16,6 +16,7 @@ import (
 
 	"htmx/config"
 	"htmx/model"
+	"htmx/pkg/dbtx"
 	"htmx/pkg/route"
 	"htmx/views/routes"
 )
@@ -28,8 +29,9 @@ type Service interface {
 }
 
 type serviceImpl struct {
-	repo Repository
-	rand RandService
+	provider dbtx.Provider
+	repo     Repository
+	rand     RandService
 
 	errorView route.ErrorView
 
@@ -39,6 +41,7 @@ type serviceImpl struct {
 
 func NewService(
 	conf config.Auth,
+	provider dbtx.Provider,
 	repo Repository,
 	randSvc RandService,
 	errorView route.ErrorView,
@@ -47,8 +50,9 @@ func NewService(
 		panic("Missing csrf_hmac_secret")
 	}
 	return &serviceImpl{
-		repo: repo,
-		rand: randSvc,
+		provider: provider,
+		repo:     repo,
+		rand:     randSvc,
 
 		errorView: errorView,
 
@@ -59,6 +63,7 @@ func NewService(
 var ServiceLoc = svloc.Register[Service](func(unv *svloc.Universe) Service {
 	return NewService(
 		config.Loc.Get(unv).Auth,
+		dbtx.ProviderLoc.Get(unv),
 		RepoLoc.Get(unv),
 		RandServiceLoc.Get(unv),
 		route.ErrorViewLoc.Get(unv),
@@ -202,7 +207,8 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return false, nil
 	}
 
-	userSess, err := s.repo.FindUserSession(ctx.Ctx, model.UserID(userID), model.SessionID(parts[2]))
+	readCtx := s.provider.Readonly(ctx.Ctx)
+	userSess, err := s.repo.FindUserSession(readCtx, model.UserID(userID), model.SessionID(parts[2]))
 	if err != nil {
 		return false, err
 	}

@@ -25,6 +25,8 @@ type Transaction interface {
 var _ Transaction = &sqlx.DB{}
 var _ Transaction = &sqlx.Tx{}
 
+//go:generate moq -out dbtx_mocks.go . Provider
+
 // Provider for creating Readonly and Transaction
 type Provider interface {
 	Transact(ctx context.Context, fn func(ctx context.Context) error) error

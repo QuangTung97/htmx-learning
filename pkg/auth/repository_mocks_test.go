@@ -20,6 +20,9 @@ var _ Repository = &RepositoryMock{}
 //
 //		// make and configure a mocked Repository
 //		mockedRepository := &RepositoryMock{
+//			FindUserFunc: func(ctx context.Context, provider string, oauthUserID string) (util.Null[model.User], error) {
+//				panic("mock out the FindUser method")
+//			},
 //			FindUserSessionFunc: func(ctx context.Context, userID model.UserID, sessionID model.SessionID) (util.Null[model.UserSession], error) {
 //				panic("mock out the FindUserSession method")
 //			},
@@ -39,6 +42,9 @@ var _ Repository = &RepositoryMock{}
 //
 //	}
 type RepositoryMock struct {
+	// FindUserFunc mocks the FindUser method.
+	FindUserFunc func(ctx context.Context, provider string, oauthUserID string) (util.Null[model.User], error)
+
 	// FindUserSessionFunc mocks the FindUserSession method.
 	FindUserSessionFunc func(ctx context.Context, userID model.UserID, sessionID model.SessionID) (util.Null[model.UserSession], error)
 
@@ -53,6 +59,15 @@ type RepositoryMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// FindUser holds details about calls to the FindUser method.
+		FindUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Provider is the provider argument value.
+			Provider string
+			// OauthUserID is the oauthUserID argument value.
+			OauthUserID string
+		}
 		// FindUserSession holds details about calls to the FindUserSession method.
 		FindUserSession []struct {
 			// Ctx is the ctx argument value.
@@ -84,10 +99,51 @@ type RepositoryMock struct {
 			Sess model.UserSession
 		}
 	}
+	lockFindUser          sync.RWMutex
 	lockFindUserSession   sync.RWMutex
 	lockGetUser           sync.RWMutex
 	lockInsertUser        sync.RWMutex
 	lockInsertUserSession sync.RWMutex
+}
+
+// FindUser calls FindUserFunc.
+func (mock *RepositoryMock) FindUser(ctx context.Context, provider string, oauthUserID string) (util.Null[model.User], error) {
+	if mock.FindUserFunc == nil {
+		panic("RepositoryMock.FindUserFunc: method is nil but Repository.FindUser was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		Provider    string
+		OauthUserID string
+	}{
+		Ctx:         ctx,
+		Provider:    provider,
+		OauthUserID: oauthUserID,
+	}
+	mock.lockFindUser.Lock()
+	mock.calls.FindUser = append(mock.calls.FindUser, callInfo)
+	mock.lockFindUser.Unlock()
+	return mock.FindUserFunc(ctx, provider, oauthUserID)
+}
+
+// FindUserCalls gets all the calls that were made to FindUser.
+// Check the length with:
+//
+//	len(mockedRepository.FindUserCalls())
+func (mock *RepositoryMock) FindUserCalls() []struct {
+	Ctx         context.Context
+	Provider    string
+	OauthUserID string
+} {
+	var calls []struct {
+		Ctx         context.Context
+		Provider    string
+		OauthUserID string
+	}
+	mock.lockFindUser.RLock()
+	calls = mock.calls.FindUser
+	mock.lockFindUser.RUnlock()
+	return calls
 }
 
 // FindUserSession calls FindUserSessionFunc.

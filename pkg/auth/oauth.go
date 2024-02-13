@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/QuangTung97/svloc"
@@ -12,6 +12,8 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"htmx/config"
+	"htmx/model"
+	"htmx/pkg/dbtx"
 	"htmx/pkg/route"
 )
 
@@ -74,29 +76,55 @@ func (s *oauthServiceImpl) Exchange(ctx context.Context, _ Provider, code string
 // ===========================================
 
 type loginServiceImpl struct {
-	oauth OAuthService
-	svc   Service
+	provider dbtx.Provider
+	oauth    OAuthService
+	svc      Service
+	rand     RandService
+	repo     Repository
 }
 
 func NewLoginService(
+	provider dbtx.Provider,
 	oauthSvc OAuthService, svc Service,
+	randSvc RandService,
+	repo Repository,
 ) LoginService {
 	return &loginServiceImpl{
-		oauth: oauthSvc,
+		provider: provider,
+		oauth:    oauthSvc,
+		svc:      svc,
+		rand:     randSvc,
+		repo:     repo,
 	}
 }
 
+var LoginServiceLoc = svloc.Register[LoginService](func(unv *svloc.Universe) LoginService {
+	return NewLoginService(
+		dbtx.ProviderLoc.Get(unv),
+		OAuthServiceLoc.Get(unv),
+		ServiceLoc.Get(unv),
+		RandServiceLoc.Get(unv),
+		RepoLoc.Get(unv),
+	)
+})
+
 const oauthState = "some-state"
+
+type googleUser struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Picture       string `json:"picture"`
+}
 
 func (s *loginServiceImpl) HandleCallback(ctx route.Context) error {
 	state := ctx.Req.URL.Query().Get("state")
 	// TODO Check State
-
-	code := ctx.Req.URL.Query().Get("code")
-
 	if state != oauthState {
 		return errors.New("invalid oauth state")
 	}
+
+	code := ctx.Req.URL.Query().Get("code")
 
 	token, err := s.oauth.Exchange(ctx.Ctx, ProviderGoogle, code)
 	if err != nil {
@@ -109,13 +137,57 @@ func (s *loginServiceImpl) HandleCallback(ctx route.Context) error {
 	}
 	defer func() { _ = response.Body.Close() }()
 
-	contents, err := io.ReadAll(response.Body)
-	if err != nil {
+	var user googleUser
+	if err := json.NewDecoder(response.Body).Decode(&user); err != nil {
 		return fmt.Errorf("failed reading response body: %s", err.Error())
 	}
 
-	fmt.Println("CONTENTS:", string(contents))
-	http.Redirect(ctx.Writer, ctx.Req, "/", http.StatusTemporaryRedirect)
+	if err := s.handleGoogleUser(ctx, user); err != nil {
+		return err
+	}
 
+	http.Redirect(ctx.Writer, ctx.Req, "/", http.StatusTemporaryRedirect)
 	return nil
+}
+
+func (s *loginServiceImpl) handleGoogleUser(ctx route.Context, user googleUser) error {
+	autoCtx := s.provider.Autocommit(ctx.Ctx)
+
+	nullUser, err := s.repo.FindUser(autoCtx, string(ProviderGoogle), user.ID)
+	if err != nil {
+		return err
+	}
+
+	loginUser := nullUser.Data
+	if !nullUser.Valid {
+		loginUser = model.User{
+			Provider:    string(ProviderGoogle),
+			OAuthUserID: user.ID,
+			Email:       user.Email,
+			ImageURL:    user.Picture,
+
+			Status: model.UserStatusActive,
+		}
+		userID, err := s.repo.InsertUser(autoCtx, loginUser)
+		if err != nil {
+			return err
+		}
+		loginUser.ID = userID
+	}
+
+	sessionID, err := s.rand.RandString(SessionByteSize)
+	if err != nil {
+		return err
+	}
+
+	userSess := model.UserSession{
+		UserID:    loginUser.ID,
+		SessionID: model.SessionID(sessionID),
+		Status:    model.UserSessionStatusActive,
+	}
+	if err := s.repo.InsertUserSession(autoCtx, userSess); err != nil {
+		return err
+	}
+
+	return s.svc.SetSession(ctx, userSess)
 }

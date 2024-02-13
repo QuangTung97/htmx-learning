@@ -51,6 +51,14 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, nil, err)
 		assert.Equal(t, false, nullUser.Valid)
 
+		// Using Find
+		nullUser, err = r.FindUser(ctx, "google", user.OAuthUserID)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, model.NullUser{
+			Valid: true,
+			Data:  user,
+		}, nullUser)
+
 		// Do Insert Duplicated
 		user.ID = 0
 		userID, err = r.InsertUser(ctx, user)
@@ -58,7 +66,7 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, model.UserID(0), userID)
 	})
 
-	t.Run("user", func(t *testing.T) {
+	t.Run("user session", func(t *testing.T) {
 		tc := integration.NewTestCase()
 		tc.TruncateTables(model.UserSession{})
 		r := RepoLoc.Get(tc.Unv)

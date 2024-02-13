@@ -11,6 +11,7 @@ import (
 
 	"htmx/config"
 	"htmx/model"
+	"htmx/pkg/dbtx"
 	"htmx/pkg/route"
 	"htmx/pkg/testhelper"
 	"htmx/pkg/util"
@@ -34,10 +35,16 @@ func newServiceTest() *serviceTest {
 		errorView: &route.ErrorViewMock{},
 	}
 
+	provider := &dbtx.ProviderMock{
+		ReadonlyFunc: func(ctx context.Context) context.Context {
+			return ctx
+		},
+	}
 	s.svc = NewService(
 		config.Auth{
 			CSRFHMACSecret: "some-secret",
 		},
+		provider,
 		s.repo, s.rand, s.errorView,
 	)
 	s.rand.RandStringFunc = func(size int) (string, error) {
