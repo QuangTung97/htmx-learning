@@ -49,11 +49,15 @@ func (c Context) IsHxRequest() bool {
 	return true
 }
 
+const hxPushURLHeader = "Hx-Push-Url"
+
 // View ...
 func (c Context) View(template string, data any) error {
 	if c.IsHxRequest() {
-		redirectURL := util.GetURLPathAndQuery(c.Req.URL)
-		c.Writer.Header().Set("HX-Push-Url", redirectURL)
+		if len(c.Writer.Header().Get(hxPushURLHeader)) == 0 {
+			redirectURL := util.GetURLPathAndQuery(c.Req.URL)
+			c.Writer.Header().Set(hxPushURLHeader, redirectURL)
+		}
 		return views.Execute(c.Writer, template, data)
 	}
 

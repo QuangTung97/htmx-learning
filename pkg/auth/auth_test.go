@@ -175,11 +175,13 @@ func TestService(t *testing.T) {
 		s.ht.NewGet("/users")
 		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234; Max-Age=2592000; HttpOnly; SameSite=Strict")
 
+		s.stubRedirect()
+
 		continuing, err := s.svc.Handle(s.ht.NewContext())
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("invalid session id"))
 	})
 
 	t.Run("req already has session, user id is not number", func(t *testing.T) {
@@ -188,21 +190,7 @@ func TestService(t *testing.T) {
 		s.ht.NewGet("/users")
 		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234a:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
-		assert.Equal(t, false, continuing)
-		assert.Equal(t, nil, err)
-
-		calls := s.repo.FindUserSessionCalls()
-		assert.Equal(t, 0, len(calls))
-
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
-	})
-
-	t.Run("req already has session, user id is not number", func(t *testing.T) {
-		s := newServiceTest()
-
-		s.ht.NewGet("/users")
-		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234a:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+		s.stubRedirect()
 
 		continuing, err := s.svc.Handle(s.ht.NewContext())
 		assert.Equal(t, false, continuing)
@@ -211,7 +199,7 @@ func TestService(t *testing.T) {
 		calls := s.repo.FindUserSessionCalls()
 		assert.Equal(t, 0, len(calls))
 
-		assert.Equal(t, http.StatusTemporaryRedirect, s.ht.Writer.Code)
+		s.assertRedirectErr(t, errors.New("invalid session id"))
 	})
 
 	t.Run("req already has session, found user session", func(t *testing.T) {

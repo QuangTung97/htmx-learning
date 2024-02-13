@@ -138,8 +138,8 @@ func (s *serviceImpl) redirectToHome(ctx route.Context) (bool, error) {
 }
 
 func (s *serviceImpl) redirectToError(ctx route.Context, err error) bool {
-	s.errorView.Redirect(ctx, err)
 	_ = s.setPreSession(ctx)
+	s.errorView.Redirect(ctx, err)
 	return false
 }
 
@@ -169,6 +169,11 @@ func (s *serviceImpl) verifyTokenWithSession(ctx route.Context, sessionID string
 	return true
 }
 
+func (s *serviceImpl) handleError(ctx route.Context, err error) (bool, error) {
+	s.redirectToError(ctx, err)
+	return false, nil
+}
+
 func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
 	if err != nil {
@@ -184,12 +189,12 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 	}
 
 	if len(parts) != 3 {
-		return s.redirectToHome(ctx)
+		return s.handleError(ctx, errors.New("invalid session id"))
 	}
 
 	userID, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return s.redirectToHome(ctx)
+		return s.handleError(ctx, errors.New("invalid session id"))
 	}
 
 	continuing := s.checkCSRFToken(ctx, sessCookie)

@@ -35,11 +35,12 @@ func (v *errorViewImpl) Redirect(ctx Context, err error) {
 		http.Redirect(ctx.Writer, ctx.Req, errorURL, http.StatusTemporaryRedirect)
 		return
 	}
-	v.renderWithMsg(ctx, err.Error())
 
 	ctx.Writer.Header().Set("Hx-Reswap", "innerHTML")
 	ctx.Writer.Header().Set("Hx-Retarget", "#body")
-	ctx.Writer.Header().Set("Hx-Push-Url", errorURL)
+	ctx.Writer.Header().Set(hxPushURLHeader, errorURL)
+
+	v.renderWithMsg(ctx, err.Error())
 }
 
 func (v *errorViewImpl) renderWithMsg(ctx Context, msg string) {
