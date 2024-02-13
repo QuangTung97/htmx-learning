@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -30,9 +31,15 @@ func main() {
 
 	mux := route.MuxLoc.Get(unv)
 
+	// ==========================
+	// Setup Middlewares
+	// ==========================
+
 	mux.GetMux().Use(
 		auth.InitMiddleware(unv),
 	)
+
+	mux.Init()
 
 	mux.Get("/", func(ctx route.Context) error {
 		return ctx.View("body.html", nil)
@@ -53,7 +60,7 @@ func main() {
 		router.Get("/{userId}", func(ctx route.Context) error {
 			fmt.Println("USERID:", ctx.GetParam("userId"))
 			fmt.Println("Another:", ctx.GetParam("another"))
-			return nil
+			return errors.New("user error")
 		})
 	})
 

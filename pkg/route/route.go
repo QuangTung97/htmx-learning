@@ -9,13 +9,11 @@ import (
 	"htmx/views/routes"
 )
 
-// Router ...
 type Router struct {
 	router    chi.Router
 	errorView ErrorView
 }
 
-// Mux ...
 type Mux struct {
 	Router
 	mux *chi.Mux
@@ -30,10 +28,6 @@ type Handler func(ctx Context) error
 func NewMux(errorView ErrorView) *Mux {
 	r := chi.NewRouter()
 
-	r.Get(routes.Error, func(writer http.ResponseWriter, request *http.Request) {
-		errorView.Render(NewContext(writer, request))
-	})
-
 	return &Mux{
 		Router: Router{
 			router:    r,
@@ -41,6 +35,16 @@ func NewMux(errorView ErrorView) *Mux {
 		},
 		mux: r,
 	}
+}
+
+func (m *Mux) Init() {
+	m.Router.router.Get(routes.Error, func(writer http.ResponseWriter, request *http.Request) {
+		m.errorView.Render(NewContext(writer, request))
+	})
+}
+
+func (m *Mux) GetMux() *chi.Mux {
+	return m.mux
 }
 
 func (r Router) Get(pattern string, handler Handler) {
@@ -65,9 +69,4 @@ func (r Router) Route(pattern string, fn func(router Router)) {
 	r.router.Route(pattern, func(innerRouter chi.Router) {
 		fn(Router{router: innerRouter, errorView: r.errorView})
 	})
-}
-
-// GetMux ...
-func (m *Mux) GetMux() *chi.Mux {
-	return m.mux
 }
