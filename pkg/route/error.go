@@ -25,6 +25,10 @@ type errorViewImpl struct {
 }
 
 func (v *errorViewImpl) Redirect(ctx Context, err error) {
+	if err == nil {
+		return
+	}
+
 	errorURL := routes.Error + "?msg=" + url.QueryEscape(err.Error())
 
 	if !ctx.HasHxRequestHeader() {

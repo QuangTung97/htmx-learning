@@ -1,7 +1,6 @@
 package route
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/QuangTung97/svloc"
@@ -12,7 +11,8 @@ import (
 
 // Router ...
 type Router struct {
-	router chi.Router
+	router    chi.Router
+	errorView ErrorView
 }
 
 // Mux ...
@@ -36,7 +36,8 @@ func NewMux(errorView ErrorView) *Mux {
 
 	return &Mux{
 		Router: Router{
-			router: r,
+			router:    r,
+			errorView: errorView,
 		},
 		mux: r,
 	}
@@ -44,53 +45,29 @@ func NewMux(errorView ErrorView) *Mux {
 
 func (r Router) Get(pattern string, handler Handler) {
 	r.router.Get(pattern, func(writer http.ResponseWriter, request *http.Request) {
-		ctx := Context{
-			Ctx:    request.Context(),
-			Req:    request,
-			Writer: writer,
-		}
-
+		ctx := NewContext(writer, request)
 		err := handler(ctx)
-		ResponseError(writer, err)
+		r.errorView.Redirect(ctx, err)
 	})
 }
 
 func (r Router) Post(pattern string, handler Handler) {
 	r.router.Post(pattern, func(writer http.ResponseWriter, request *http.Request) {
-		ctx := Context{
-			Ctx:    request.Context(),
-			Req:    request,
-			Writer: writer,
-		}
+		ctx := NewContext(writer, request)
 
 		err := handler(ctx)
-		ResponseError(writer, err)
+		r.errorView.Redirect(ctx, err)
 	})
 }
 
 // Route ...
 func (r Router) Route(pattern string, fn func(router Router)) {
-	r.router.Route(pattern, func(r chi.Router) {
-		fn(Router{router: r})
+	r.router.Route(pattern, func(innerRouter chi.Router) {
+		fn(Router{router: innerRouter, errorView: r.errorView})
 	})
 }
 
 // GetMux ...
 func (m *Mux) GetMux() *chi.Mux {
 	return m.mux
-}
-
-func ResponseError(writer http.ResponseWriter, err error) {
-	if err == nil {
-		return
-	}
-
-	writer.Header().Add("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusInternalServerError)
-	type errorResponse struct {
-		Message string `json:"message"`
-	}
-	_ = json.NewEncoder(writer).Encode(errorResponse{
-		Message: err.Error(),
-	})
 }

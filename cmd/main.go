@@ -31,7 +31,7 @@ func main() {
 	mux := route.MuxLoc.Get(unv)
 
 	mux.GetMux().Use(
-		auth.Middleware(auth.ServiceLoc.Get(unv)),
+		auth.InitMiddleware(unv),
 	)
 
 	mux.Get("/", func(ctx route.Context) error {

@@ -2,7 +2,6 @@ package testhelper
 
 import (
 	"bytes"
-	"context"
 	"net/http"
 	"net/http/httptest"
 
@@ -28,7 +27,7 @@ func (h *HTTPTest) NewPost(urlPath string, body string) {
 	h.Req = httptest.NewRequest(http.MethodPost, urlPath, &buf)
 }
 
-func (h *HTTPTest) NewResponse() *httptest.ResponseRecorder {
+func (h *HTTPTest) newResponse() *httptest.ResponseRecorder {
 	h.Writer = httptest.NewRecorder()
 	return h.Writer
 }
@@ -37,9 +36,5 @@ func (h *HTTPTest) NewContext() route.Context {
 	if h.Req == nil {
 		panic("Not yet init request object")
 	}
-	return route.Context{
-		Ctx:    context.Background(),
-		Req:    h.Req,
-		Writer: h.NewResponse(),
-	}
+	return route.NewContext(h.newResponse(), h.Req)
 }

@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/QuangTung97/svloc"
+
 	"htmx/pkg/route"
 )
 
-func Middleware(s Service) func(handler http.Handler) http.Handler {
+func Middleware(s Service, errorView route.ErrorView) func(handler http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			if strings.HasPrefix(request.URL.Path, "/public/") {
@@ -15,9 +17,10 @@ func Middleware(s Service) func(handler http.Handler) http.Handler {
 				return
 			}
 
-			continuing, err := s.Handle(route.NewContext(writer, request))
+			ctx := route.NewContext(writer, request)
+			continuing, err := s.Handle(ctx)
 			if err != nil {
-				route.ResponseError(writer, err)
+				errorView.Redirect(ctx, err)
 				return
 			}
 
@@ -28,4 +31,11 @@ func Middleware(s Service) func(handler http.Handler) http.Handler {
 			handler.ServeHTTP(writer, request)
 		})
 	}
+}
+
+func InitMiddleware(unv *svloc.Universe) func(handler http.Handler) http.Handler {
+	return Middleware(
+		ServiceLoc.Get(unv),
+		route.ErrorViewLoc.Get(unv),
+	)
 }
