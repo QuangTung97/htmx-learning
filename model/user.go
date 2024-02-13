@@ -22,6 +22,10 @@ type User struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
+func (User) TableName() string {
+	return "users"
+}
+
 type NullUser = util.Null[User]
 
 type UserStatus int

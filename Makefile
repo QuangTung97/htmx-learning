@@ -1,4 +1,4 @@
-.PHONY: test test-update build-css run install-tools
+.PHONY: test test-update build-css run install-tools migrate-up
 
 test:
 	go test ./...
@@ -15,3 +15,6 @@ run:
 install-tools:
 	go install github.com/matryer/moq
 	go install github.com/mgechev/revive
+
+migrate-up:
+	go run cmd/migrate/main.go up

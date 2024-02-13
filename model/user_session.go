@@ -18,6 +18,10 @@ type UserSession struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
+func (UserSession) TableName() string {
+	return "user_sessions"
+}
+
 type NullUserSession = util.Null[UserSession]
 
 type UserSessionStatus int

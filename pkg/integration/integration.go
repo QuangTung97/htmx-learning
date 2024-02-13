@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -11,7 +12,12 @@ import (
 
 	"htmx/config"
 	"htmx/model"
+	"htmx/pkg/dbtx"
 	"htmx/pkg/migration"
+
+	// for integration test, must not be imported in any main.go
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 type TestCase struct {
@@ -52,6 +58,10 @@ func (tc *TestCase) TruncateTables(tables ...model.GetTableName) {
 		fmt.Println("TRUNCATING Table:", table.TableName())
 		db.MustExec(fmt.Sprintf("TRUNCATE %s", table.TableName()))
 	}
+}
+
+func (tc *TestCase) Autocommit() context.Context {
+	return dbtx.ProviderLoc.Get(tc.Unv).Autocommit(context.Background())
 }
 
 func findRootDir() string {

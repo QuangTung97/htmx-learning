@@ -4,11 +4,15 @@ import (
 	"context"
 
 	"github.com/QuangTung97/svloc"
+	"github.com/pkg/errors"
 
 	"htmx/model"
+	"htmx/pkg/util/dblib"
 )
 
 //go:generate moq -out repository_mocks_test.go . Repository RandService
+
+var ErrDuplicatedUser = errors.New("duplicated user")
 
 type Repository interface {
 	GetUser(ctx context.Context, userID model.UserID) (model.NullUser, error)
@@ -26,7 +30,11 @@ var RepoLoc = svloc.Register[Repository](func(unv *svloc.Universe) Repository {
 })
 
 func (r *repoImpl) GetUser(ctx context.Context, userID model.UserID) (model.NullUser, error) {
-	return model.NullUser{}, nil
+	query := `
+SELECT id, provider, oauth_user_id, email, image_url, status
+FROM users WHERE id = ?
+`
+	return dblib.Get[model.User](ctx, query, userID)
 }
 
 func (r *repoImpl) FindUserSession(
@@ -36,7 +44,11 @@ func (r *repoImpl) FindUserSession(
 }
 
 func (r *repoImpl) InsertUser(ctx context.Context, user model.User) (model.UserID, error) {
-	return 0, nil
+	query := `
+INSERT INTO users (provider, oauth_user_id, email, image_url, status)
+VALUES (:provider, :oauth_user_id, :email, :image_url, :status)
+`
+	return dblib.Insert[model.UserID](ctx, query, user)
 }
 
 func (r *repoImpl) InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error {
