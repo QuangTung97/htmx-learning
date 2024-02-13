@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/go-sql-driver/mysql"
+
 	"htmx/model"
 	"htmx/pkg/dbtx"
 	"htmx/pkg/util"
@@ -37,4 +39,15 @@ func Insert[T ~int64](ctx context.Context, query string, data any) (T, error) {
 		return 0, err
 	}
 	return T(id), nil
+}
+
+func IsDuplicatedErr(err error) bool {
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) {
+		const duplicatedCode = 0x426
+		if mysqlErr.Number == duplicatedCode {
+			return true
+		}
+	}
+	return false
 }

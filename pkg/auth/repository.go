@@ -48,7 +48,11 @@ func (r *repoImpl) InsertUser(ctx context.Context, user model.User) (model.UserI
 INSERT INTO users (provider, oauth_user_id, email, image_url, status)
 VALUES (:provider, :oauth_user_id, :email, :image_url, :status)
 `
-	return dblib.Insert[model.UserID](ctx, query, user)
+	userID, err := dblib.Insert[model.UserID](ctx, query, user)
+	if dblib.IsDuplicatedErr(err) {
+		return 0, ErrDuplicatedUser
+	}
+	return userID, err
 }
 
 func (r *repoImpl) InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error {

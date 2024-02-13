@@ -50,5 +50,11 @@ func TestRepository(t *testing.T) {
 		nullUser, err = r.GetUser(ctx, 2)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, false, nullUser.Valid)
+
+		// Do Insert Duplicated
+		user.ID = 0
+		userID, err = r.InsertUser(ctx, user)
+		assert.Equal(t, ErrDuplicatedUser, err)
+		assert.Equal(t, model.UserID(0), userID)
 	})
 }
