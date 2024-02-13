@@ -5,12 +5,16 @@ go 1.20
 require (
 	github.com/QuangTung97/svloc v0.5.0
 	github.com/go-chi/chi/v5 v5.0.11
+	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/matryer/moq v0.3.4
 	github.com/mgechev/revive v1.3.4
 	github.com/sebdah/goldie/v2 v2.5.3
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.17.0
+	golang.org/x/text v0.14.0
 )
 
 require (
@@ -23,8 +27,10 @@ require (
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
@@ -50,7 +56,6 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect

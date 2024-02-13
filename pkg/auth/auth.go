@@ -24,7 +24,7 @@ type Service interface {
 	Handle(ctx route.Context) (continuing bool, err error)
 
 	VerifyCSRFToken(ctx route.Context, token string) bool
-	SetSession(ctx route.Context, sess model.UserSession)
+	SetSession(ctx route.Context, sess model.UserSession) error
 }
 
 type serviceImpl struct {
@@ -224,12 +224,9 @@ func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool)
 	return s.verifyTokenWithSession(ctx, sessCookie.Value, token)
 }
 
-func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) {
+func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) error {
 	sessID := fmt.Sprintf("%s:%d:%s", sessionPrefix, sess.UserID, sess.SessionID)
-	err := s.setSessionCookie(ctx, sessID)
-	if err != nil {
-		s.errorView.Redirect(ctx, err)
-	}
+	return s.setSessionCookie(ctx, sessID)
 }
 
 type RandService interface {

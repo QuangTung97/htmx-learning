@@ -30,6 +30,17 @@ func Load() Config {
 	return loadConfig(vip)
 }
 
+// LoadTestConfig for integration testing
+func LoadTestConfig(path string) Config {
+	vip := viper.New()
+
+	vip.SetConfigName("config_test")
+	vip.SetConfigType("yml")
+	vip.AddConfigPath(path)
+
+	return loadConfig(vip)
+}
+
 var IsProdLoc = svloc.Register[bool](func(unv *svloc.Universe) bool {
 	return Loc.Get(unv).Env == "production"
 })

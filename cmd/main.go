@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/QuangTung97/svloc"
-
-	"htmx/config"
+	"htmx/config/prod"
 	"htmx/pkg/auth"
 	auth_handlers "htmx/pkg/auth/handlers"
 	"htmx/pkg/route"
@@ -24,17 +22,13 @@ func disableCache(handler http.Handler) http.Handler {
 }
 
 func main() {
-	unv := svloc.NewUniverse()
-	config.Loc.MustOverrideFunc(unv, func(unv *svloc.Universe) config.Config {
-		return config.Load()
-	})
+	unv := prod.NewUniverse()
 
 	mux := route.MuxLoc.Get(unv)
 
 	// ==========================
 	// Setup Middlewares
 	// ==========================
-
 	mux.GetMux().Use(
 		auth.InitMiddleware(unv),
 	)
