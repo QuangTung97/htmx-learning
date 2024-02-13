@@ -29,7 +29,7 @@ var _ Repository = &RepositoryMock{}
 //			InsertUserFunc: func(ctx context.Context, user model.User) (model.UserID, error) {
 //				panic("mock out the InsertUser method")
 //			},
-//			InsertUserSessionFunc: func(ctx context.Context, userID model.UserID, sessionID model.SessionID) error {
+//			InsertUserSessionFunc: func(ctx context.Context, sess model.UserSession) error {
 //				panic("mock out the InsertUserSession method")
 //			},
 //		}
@@ -49,7 +49,7 @@ type RepositoryMock struct {
 	InsertUserFunc func(ctx context.Context, user model.User) (model.UserID, error)
 
 	// InsertUserSessionFunc mocks the InsertUserSession method.
-	InsertUserSessionFunc func(ctx context.Context, userID model.UserID, sessionID model.SessionID) error
+	InsertUserSessionFunc func(ctx context.Context, sess model.UserSession) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -80,10 +80,8 @@ type RepositoryMock struct {
 		InsertUserSession []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// UserID is the userID argument value.
-			UserID model.UserID
-			// SessionID is the sessionID argument value.
-			SessionID model.SessionID
+			// Sess is the sess argument value.
+			Sess model.UserSession
 		}
 	}
 	lockFindUserSession   sync.RWMutex
@@ -205,23 +203,21 @@ func (mock *RepositoryMock) InsertUserCalls() []struct {
 }
 
 // InsertUserSession calls InsertUserSessionFunc.
-func (mock *RepositoryMock) InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error {
+func (mock *RepositoryMock) InsertUserSession(ctx context.Context, sess model.UserSession) error {
 	if mock.InsertUserSessionFunc == nil {
 		panic("RepositoryMock.InsertUserSessionFunc: method is nil but Repository.InsertUserSession was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		UserID    model.UserID
-		SessionID model.SessionID
+		Ctx  context.Context
+		Sess model.UserSession
 	}{
-		Ctx:       ctx,
-		UserID:    userID,
-		SessionID: sessionID,
+		Ctx:  ctx,
+		Sess: sess,
 	}
 	mock.lockInsertUserSession.Lock()
 	mock.calls.InsertUserSession = append(mock.calls.InsertUserSession, callInfo)
 	mock.lockInsertUserSession.Unlock()
-	return mock.InsertUserSessionFunc(ctx, userID, sessionID)
+	return mock.InsertUserSessionFunc(ctx, sess)
 }
 
 // InsertUserSessionCalls gets all the calls that were made to InsertUserSession.
@@ -229,14 +225,12 @@ func (mock *RepositoryMock) InsertUserSession(ctx context.Context, userID model.
 //
 //	len(mockedRepository.InsertUserSessionCalls())
 func (mock *RepositoryMock) InsertUserSessionCalls() []struct {
-	Ctx       context.Context
-	UserID    model.UserID
-	SessionID model.SessionID
+	Ctx  context.Context
+	Sess model.UserSession
 } {
 	var calls []struct {
-		Ctx       context.Context
-		UserID    model.UserID
-		SessionID model.SessionID
+		Ctx  context.Context
+		Sess model.UserSession
 	}
 	mock.lockInsertUserSession.RLock()
 	calls = mock.calls.InsertUserSession

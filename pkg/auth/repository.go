@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"htmx/model"
+	"htmx/pkg/dbtx"
 	"htmx/pkg/util/dblib"
 )
 
@@ -19,7 +20,7 @@ type Repository interface {
 	FindUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) (model.NullUserSession, error)
 
 	InsertUser(ctx context.Context, user model.User) (model.UserID, error)
-	InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error
+	InsertUserSession(ctx context.Context, sess model.UserSession) error
 }
 
 type repoImpl struct {
@@ -40,7 +41,11 @@ FROM users WHERE id = ?
 func (r *repoImpl) FindUserSession(
 	ctx context.Context, userID model.UserID, sessionID model.SessionID,
 ) (model.NullUserSession, error) {
-	return model.NullUserSession{}, nil
+	query := `
+SELECT user_id, session_id, status FROM user_sessions
+WHERE user_id = ? AND session_id = ?
+`
+	return dblib.Get[model.UserSession](ctx, query, userID, sessionID)
 }
 
 func (r *repoImpl) InsertUser(ctx context.Context, user model.User) (model.UserID, error) {
@@ -55,6 +60,12 @@ VALUES (:provider, :oauth_user_id, :email, :image_url, :status)
 	return userID, err
 }
 
-func (r *repoImpl) InsertUserSession(ctx context.Context, userID model.UserID, sessionID model.SessionID) error {
-	return nil
+func (r *repoImpl) InsertUserSession(ctx context.Context, sess model.UserSession) error {
+	query := `
+INSERT INTO user_sessions (user_id, session_id, status)
+VALUES (:user_id, :session_id, :status)
+`
+	tx := dbtx.GetTx(ctx)
+	_, err := tx.NamedExecContext(ctx, query, sess)
+	return err
 }
