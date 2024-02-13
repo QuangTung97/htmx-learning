@@ -2,3 +2,13 @@ auth:
   csrf_hmac_secret: some-hmac-secret
   google_client_id: google-client-id
   google_client_secret: google-client-secret
+
+mysql:
+  host: localhost
+  port: 3306
+  database: htmx
+  username: root
+  password: 1
+  max_open_conns: 20
+  max_idle_conns: 5
+  options: "parseTime=true"

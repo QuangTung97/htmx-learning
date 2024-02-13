@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Env  string `mapstructure:"env"`
-	Auth Auth   `mapstructure:"auth"`
+	Env   string      `mapstructure:"env"`
+	Auth  Auth        `mapstructure:"auth"`
+	MySQL MySQLConfig `mapstructure:"mysql"`
 }
 
 type Auth struct {
