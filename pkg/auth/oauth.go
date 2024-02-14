@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/QuangTung97/svloc"
 	"golang.org/x/oauth2"
@@ -29,6 +30,7 @@ type OAuthService interface {
 }
 
 type LoginService interface {
+	BuildOAuthState(ctx route.Context) (string, error)
 	HandleCallback(ctx route.Context) error
 }
 
@@ -108,8 +110,6 @@ var LoginServiceLoc = svloc.Register[LoginService](func(unv *svloc.Universe) Log
 	)
 })
 
-const oauthState = "some-state"
-
 type googleUser struct {
 	ID            string `json:"id"`
 	Email         string `json:"email"`
@@ -117,11 +117,19 @@ type googleUser struct {
 	Picture       string `json:"picture"`
 }
 
+func (s *loginServiceImpl) BuildOAuthState(ctx route.Context) (string, error) {
+	cookie, err := ctx.Req.Cookie(csrfTokenCookie)
+	if err != nil {
+		return "", errors.New("invalid csrf token")
+	}
+	return buildOAuthState(cookie.Value), nil
+}
+
 func (s *loginServiceImpl) HandleCallback(ctx route.Context) error {
 	state := ctx.Req.URL.Query().Get("state")
-	// TODO Check State
-	if state != oauthState {
-		return errors.New("invalid oauth state")
+	csrfToken := getCSRFTokenFromState(state)
+	if !s.svc.VerifyCSRFToken(ctx, csrfToken) {
+		return nil
 	}
 
 	code := ctx.Req.URL.Query().Get("code")
@@ -190,4 +198,14 @@ func (s *loginServiceImpl) handleGoogleUser(ctx route.Context, user googleUser) 
 	}
 
 	return s.svc.SetSession(ctx, userSess)
+}
+
+const stateCSRFPrefix = "csrf="
+
+func buildOAuthState(csrfToken string) string {
+	return stateCSRFPrefix + csrfToken
+}
+
+func getCSRFTokenFromState(state string) string {
+	return strings.TrimPrefix(state, stateCSRFPrefix)
 }
