@@ -50,7 +50,7 @@ func main() {
 			return auth.ErrUserNotYetLoggedIn
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		type tmplData struct {
 			Count int64
 		}
