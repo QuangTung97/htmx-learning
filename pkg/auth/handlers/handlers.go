@@ -27,6 +27,10 @@ func Register(unv *svloc.Universe) {
 	mux := route.MuxLoc.Get(unv)
 
 	mux.Get("/login", func(ctx route.Context) error {
+		if _, ok := auth.GetUserInfoNull(ctx.Ctx); ok {
+			return auth.ErrUserAlreadyLoggedIn
+		}
+
 		newURL := ctx.Req.URL
 		newURL.RawQuery += "backUrl=" + url.QueryEscape(getCurrentURLPath(ctx))
 		ctx.Req.URL = newURL
@@ -38,6 +42,10 @@ func Register(unv *svloc.Universe) {
 	loginSvc := auth.LoginServiceLoc.Get(unv)
 
 	mux.Post(routes.OAuthGoogleLogin, func(ctx route.Context) error {
+		if _, ok := auth.GetUserInfoNull(ctx.Ctx); ok {
+			return auth.ErrUserAlreadyLoggedIn
+		}
+
 		state, err := loginSvc.BuildOAuthState(ctx)
 		if err != nil {
 			return err

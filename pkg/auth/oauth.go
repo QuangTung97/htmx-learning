@@ -125,7 +125,13 @@ func (s *loginServiceImpl) BuildOAuthState(ctx route.Context) (string, error) {
 	return buildOAuthState(cookie.Value), nil
 }
 
+var ErrUserAlreadyLoggedIn = errors.New("user already logged in")
+
 func (s *loginServiceImpl) HandleCallback(ctx route.Context) error {
+	if _, ok := GetUserInfoNull(ctx.Ctx); ok {
+		return ErrUserAlreadyLoggedIn
+	}
+
 	state := ctx.Req.URL.Query().Get("state")
 	csrfToken := getCSRFTokenFromState(state)
 	if !s.svc.VerifyCSRFToken(ctx, csrfToken) {
