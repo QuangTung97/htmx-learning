@@ -1,5 +1,5 @@
 document.body.addEventListener("htmx:sendError", function (e) {
-  alert("Your network is disconnected");
+  alert("Error: Your network is disconnected");
 });
 
 function getCookie(name) {
