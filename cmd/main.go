@@ -10,6 +10,8 @@ import (
 	"htmx/pkg/auth"
 	auth_handlers "htmx/pkg/auth/handlers"
 	"htmx/pkg/route"
+	"htmx/views"
+	"htmx/views/routes"
 )
 
 var counter atomic.Int64
@@ -35,11 +37,17 @@ func main() {
 
 	mux.Init()
 
-	mux.Get("/", func(ctx route.Context) error {
-		return ctx.View("body.html", nil)
+	mux.Get(routes.Home, func(ctx route.Context) error {
+		_, ok := auth.GetUserInfoNull(ctx.Ctx)
+		return ctx.View(views.TemplateBody, views.BodyData{
+			LoggedIn: ok,
+		})
 	})
 
 	mux.Post("/reload", func(ctx route.Context) error {
+		if _, ok := auth.GetUserInfoNull(ctx.Ctx); !ok {
+			return auth.ErrUserNotYetLoggedIn
+		}
 		type tmplData struct {
 			Count int64
 		}

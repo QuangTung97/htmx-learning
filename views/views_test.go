@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func newGoldie(t *testing.T) *goldie.Goldie {
+	return goldie.New(t,
+		goldie.WithFixtureDir("testdata"),
+		goldie.WithNameSuffix(".html"),
+	)
+}
+
 func TestTemplate(t *testing.T) {
 	tmpl := getTemplates()
 
@@ -16,16 +23,25 @@ func TestTemplate(t *testing.T) {
 		fmt.Println(subTmpl.Name())
 	}
 
-	g := goldie.New(t,
-		goldie.WithFixtureDir("testdata"),
-		goldie.WithNameSuffix(".html"),
-	)
-
-	bodyHTML, err := ExecuteHTML("body.html", nil)
+	body, err := ExecuteHTML(TemplateBody, BodyData{})
 	assert.Equal(t, nil, err)
 
 	var buf bytes.Buffer
-	err = View(&buf, bodyHTML)
+	err = View(&buf, body)
+
 	assert.Equal(t, nil, err)
+	g := newGoldie(t)
 	g.Assert(t, "full", buf.Bytes())
+}
+
+func TestTemplate_RenderBody(t *testing.T) {
+	t.Run("logged in", func(t *testing.T) {
+		body, err := ExecuteHTML(TemplateBody, BodyData{
+			LoggedIn: true,
+		})
+
+		assert.Equal(t, nil, err)
+		g := newGoldie(t)
+		g.Assert(t, "body-logged-in", []byte(body))
+	})
 }

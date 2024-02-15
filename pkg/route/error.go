@@ -7,6 +7,7 @@ import (
 
 	"github.com/QuangTung97/svloc"
 
+	"htmx/views"
 	"htmx/views/routes"
 )
 
@@ -48,7 +49,7 @@ func (v *errorViewImpl) renderWithMsg(ctx Context, msg string) {
 		HomeURL string
 		Text    string
 	}
-	_ = ctx.View("common/error.html", templateData{
+	_ = ctx.View(views.TemplateError, templateData{
 		HomeURL: routes.Home,
 		Text:    fmt.Sprintf("Error: %s", msg),
 	})

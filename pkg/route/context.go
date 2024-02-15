@@ -24,7 +24,7 @@ func NewContext(w http.ResponseWriter, r *http.Request) Context {
 	}
 }
 
-func (c Context) Render(template string, data any) error {
+func (c Context) Render(template views.Template, data any) error {
 	return views.Execute(c.Writer, template, data)
 }
 
@@ -52,7 +52,7 @@ func (c Context) IsHxRequest() bool {
 const hxPushURLHeader = "Hx-Push-Url"
 
 // View ...
-func (c Context) View(template string, data any) error {
+func (c Context) View(template views.Template, data any) error {
 	if c.IsHxRequest() {
 		if len(c.Writer.Header().Get(hxPushURLHeader)) == 0 {
 			redirectURL := util.GetURLPathAndQuery(c.Req.URL)

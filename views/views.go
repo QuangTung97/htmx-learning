@@ -6,11 +6,11 @@ import (
 	"io"
 )
 
-func Execute(w io.Writer, templateName string, data any) error {
-	return getTemplates().ExecuteTemplate(w, templateName, data)
+func Execute(w io.Writer, templateName Template, data any) error {
+	return getTemplates().ExecuteTemplate(w, string(templateName), data)
 }
 
-func ExecuteHTML(templateName string, data any) (template.HTML, error) {
+func ExecuteHTML(templateName Template, data any) (template.HTML, error) {
 	var buf bytes.Buffer
 	if err := Execute(&buf, templateName, data); err != nil {
 		return "", err
@@ -25,4 +25,18 @@ func View(w io.Writer, body template.HTML) error {
 	return Execute(w, "main.html", templateData{
 		Body: body,
 	})
+}
+
+type Template string
+
+const (
+	TemplateBody Template = "body.html"
+
+	TemplateLogin Template = "auth/google-login.html"
+
+	TemplateError Template = "common/error.html"
+)
+
+type BodyData struct {
+	LoggedIn bool
 }

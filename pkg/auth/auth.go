@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ type Service interface {
 
 	VerifyCSRFToken(ctx route.Context, token string) bool
 	SetSession(ctx route.Context, sess model.UserSession) error
+	SetPreLoginSession(ctx route.Context) error
 }
 
 type serviceImpl struct {
@@ -37,6 +39,8 @@ type serviceImpl struct {
 
 	isProd    bool
 	secretKey string
+
+	logger *slog.Logger
 }
 
 func NewService(
@@ -244,6 +248,10 @@ func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool)
 func (s *serviceImpl) SetSession(ctx route.Context, sess model.UserSession) error {
 	sessID := fmt.Sprintf("%s:%d:%s", sessionPrefix, sess.UserID, sess.SessionID)
 	return s.setSessionCookie(ctx, sessID)
+}
+
+func (s *serviceImpl) SetPreLoginSession(ctx route.Context) error {
+	return s.setPreSession(ctx)
 }
 
 type RandService interface {

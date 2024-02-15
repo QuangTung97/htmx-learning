@@ -32,6 +32,7 @@ type OAuthService interface {
 type LoginService interface {
 	BuildOAuthState(ctx route.Context) (string, error)
 	HandleCallback(ctx route.Context) error
+	HandleLogOut(ctx route.Context) error
 }
 
 var OAuthServiceLoc = svloc.Register[OAuthService](func(unv *svloc.Universe) OAuthService {
@@ -127,6 +128,8 @@ func (s *loginServiceImpl) BuildOAuthState(ctx route.Context) (string, error) {
 
 var ErrUserAlreadyLoggedIn = errors.New("user already logged in")
 
+var ErrUserNotYetLoggedIn = errors.New("user not yet logged in")
+
 func (s *loginServiceImpl) HandleCallback(ctx route.Context) error {
 	if _, ok := GetUserInfoNull(ctx.Ctx); ok {
 		return ErrUserAlreadyLoggedIn
@@ -204,6 +207,10 @@ func (s *loginServiceImpl) handleGoogleUser(ctx route.Context, user googleUser) 
 	}
 
 	return s.svc.SetSession(ctx, userSess)
+}
+
+func (s *loginServiceImpl) HandleLogOut(ctx route.Context) error {
+	return s.svc.SetPreLoginSession(ctx)
 }
 
 const stateCSRFPrefix = "csrf="
