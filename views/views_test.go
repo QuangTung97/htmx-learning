@@ -2,7 +2,6 @@ package views
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -16,13 +15,7 @@ func newGoldie(t *testing.T) *goldie.Goldie {
 	)
 }
 
-func TestTemplate(t *testing.T) {
-	tmpl := getTemplates()
-
-	for _, subTmpl := range tmpl.Templates() {
-		fmt.Println(subTmpl.Name())
-	}
-
+func TestTemplate_Full(t *testing.T) {
 	body, err := ExecuteHTML(TemplateBody, BodyData{})
 	assert.Equal(t, nil, err)
 
@@ -32,6 +25,20 @@ func TestTemplate(t *testing.T) {
 	assert.Equal(t, nil, err)
 	g := newGoldie(t)
 	g.Assert(t, "full", buf.Bytes())
+}
+
+func TestTemplate_Full_Logged_In(t *testing.T) {
+	body, err := ExecuteHTML(TemplateBody, BodyData{
+		LoggedIn: true,
+	})
+	assert.Equal(t, nil, err)
+
+	var buf bytes.Buffer
+	err = View(&buf, body)
+
+	assert.Equal(t, nil, err)
+	g := newGoldie(t)
+	g.Assert(t, "full-logged-in", buf.Bytes())
 }
 
 func TestTemplate_RenderBody(t *testing.T) {
