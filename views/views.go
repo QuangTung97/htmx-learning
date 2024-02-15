@@ -39,4 +39,5 @@ const (
 
 type BodyData struct {
 	LoggedIn bool
+	Table    []string
 }

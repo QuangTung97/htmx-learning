@@ -42,6 +42,9 @@ func main() {
 		_, ok := auth.GetUserInfoNull(ctx.Ctx)
 		return ctx.View(views.TemplateBody, views.BodyData{
 			LoggedIn: ok,
+			Table: []string{
+				"a", "b", "c", "d", "e",
+			},
 		})
 	})
 

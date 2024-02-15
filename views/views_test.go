@@ -30,6 +30,7 @@ func TestTemplate_Full(t *testing.T) {
 func TestTemplate_Full_Logged_In(t *testing.T) {
 	body, err := ExecuteHTML(TemplateBody, BodyData{
 		LoggedIn: true,
+		Table:    []string{"a", "b", "c", "d", "e"},
 	})
 	assert.Equal(t, nil, err)
 
@@ -45,6 +46,7 @@ func TestTemplate_RenderBody(t *testing.T) {
 	t.Run("logged in", func(t *testing.T) {
 		body, err := ExecuteHTML(TemplateBody, BodyData{
 			LoggedIn: true,
+			Table:    []string{"a", "b", "c", "d", "e"},
 		})
 
 		assert.Equal(t, nil, err)
