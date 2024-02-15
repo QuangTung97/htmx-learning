@@ -1,21 +1,25 @@
 {{ template "common/top-bar.html" . }}
-<h1 class="mb-2 text-2xl px-8 py-4 border-2 w-1/3 rounded-2xl shadow font-bold">Hello World</h1>
+<div class="w-full flex justify-center">
+  <div class="w-3/5">
+    <h1 class="mb-2 text-2xl px-8 py-4 border-2 w-full max-w-96 rounded-2xl shadow font-bold">Hello World</h1>
 
-<div class="space-y-2">
-  <div class="text-2xl py-4 px-2 border-2 shadow rounded-full w-1/3 text-center font-semibold text-purple-800">
-    Body Test
+    <div class="space-y-2">
+      <div class="text-2xl py-4 px-2 border-2 shadow rounded-full w-full max-w-96 text-center font-semibold text-purple-800">
+        Body Test
+      </div>
+      <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-full max-w-96">Some Span</div>
+      {{ if .LoggedIn }}
+      <button
+          class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+          hx-post="/reload"
+          hx-target="#reload-target"
+          hx-swap="outerHTML"
+      >
+        Reload
+      </button>
+      {{ end }}
+    </div>
   </div>
-  <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-1/3">Some Span</div>
-  {{ if .LoggedIn }}
-  <button
-      class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
-      hx-post="/reload"
-      hx-target="#reload-target"
-      hx-swap="outerHTML"
-  >
-    Reload
-  </button>
-  {{ end }}
 </div>
 
 <div id="modal" class="hidden">
