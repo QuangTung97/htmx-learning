@@ -293,9 +293,14 @@ func TestService(t *testing.T) {
 
 		s.stubFindSess(model.NullUserSession{
 			Valid: true,
+			Data: model.UserSession{
+				SessionID: "some-session-id",
+				UserID:    12,
+			},
 		})
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(ctx)
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
@@ -305,6 +310,19 @@ func TestService(t *testing.T) {
 		headers := s.ht.Writer.Header()
 		assert.Equal(t, http.Header{}, headers)
 		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+
+		// UserInfo in context
+		info, ok := GetUserInfoNull(ctx.Req.Context())
+		assert.Equal(t, true, ok)
+		assert.Equal(t, UserInfo{
+			User: model.User{
+				ID: 12,
+			},
+			Session: model.UserSession{
+				UserID:    12,
+				SessionID: "some-session-id",
+			},
+		}, info)
 	})
 
 	t.Run("post, has session, with csrf_token, mismatch hmac", func(t *testing.T) {

@@ -216,6 +216,14 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return s.redirectToHome(ctx)
 	}
 
+	newReq := ctx.Req.WithContext(SetUserInfo(ctx.Ctx, UserInfo{
+		User: model.User{
+			ID: userSess.Data.UserID,
+		},
+		Session: userSess.Data,
+	}))
+	*ctx.Req = *newReq
+
 	return true, nil
 }
 
