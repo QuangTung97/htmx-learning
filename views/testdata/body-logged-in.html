@@ -37,19 +37,25 @@
     <h1 class="mb-2 text-2xl px-8 py-4 border-2 w-full max-w-96 rounded-2xl shadow font-bold">Hello World</h1>
 
     <div class="space-y-2">
-      <div class="text-2xl py-4 px-2 border-2 shadow rounded-full w-full max-w-96 text-center font-semibold text-purple-800">
+      <div
+          class="text-2xl py-4 px-2 border-2 shadow rounded-full w-full max-w-96 text-center font-semibold text-purple-800"
+      >
         Body Test
       </div>
       <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-full max-w-96">Some Span</div>
       
-      <button
-          class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
-          hx-post="/reload"
-          hx-target="#reload-target"
-          hx-swap="outerHTML"
-      >
-        Reload
-      </button>
+      <div class="flex items-center gap-x-1">
+        <button
+            class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+            hx-post="/reload"
+            hx-target="#reload-target"
+            hx-swap="outerHTML"
+            hx-indicator="#reload-indicator"
+        >
+          Reload
+        </button>
+        <img id="reload-indicator" src="/public/images/spinning-circles.svg" class="htmx-indicator" alt="..." width="25px"/>
+      </div>
       
     </div>
   </div>

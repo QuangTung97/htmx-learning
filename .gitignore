@@ -2,9 +2,7 @@
 
 /views/styles/node_modules
 
-/public/*
-!/public/htmx@*.js
-!/public/script.js
+/public/styles*.css
 
 /config.yml
 /config_test.yml

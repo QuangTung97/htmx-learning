@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"htmx/config/prod"
 	"htmx/pkg/auth"
@@ -48,6 +49,8 @@ func main() {
 		if _, ok := auth.GetUserInfoNull(ctx.Ctx); !ok {
 			return auth.ErrUserNotYetLoggedIn
 		}
+
+		time.Sleep(1 * time.Second)
 		type tmplData struct {
 			Count int64
 		}
