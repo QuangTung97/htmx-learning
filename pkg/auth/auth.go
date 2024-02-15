@@ -22,7 +22,7 @@ import (
 )
 
 type Service interface {
-	Handle(ctx route.Context) (continuing bool, err error)
+	Handle(ctx *route.Context) (continuing bool, err error)
 
 	VerifyCSRFToken(ctx route.Context, token string) bool
 	SetSession(ctx route.Context, sess model.UserSession) error
@@ -179,7 +179,9 @@ func (s *serviceImpl) handleError(ctx route.Context, err error) (bool, error) {
 	return false, nil
 }
 
-func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
+func (s *serviceImpl) Handle(ctxPtr *route.Context) (bool, error) {
+	ctx := *ctxPtr
+
 	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
@@ -216,13 +218,14 @@ func (s *serviceImpl) Handle(ctx route.Context) (bool, error) {
 		return s.redirectToHome(ctx)
 	}
 
-	newReq := ctx.Req.WithContext(SetUserInfo(ctx.Ctx, UserInfo{
+	newCtx := SetUserInfo(ctx.Ctx, UserInfo{
 		User: model.User{
 			ID: userSess.Data.UserID,
 		},
 		Session: userSess.Data,
-	}))
-	*ctx.Req = *newReq
+	})
+	ctxPtr.Ctx = newCtx
+	ctxPtr.Req = ctx.Req.WithContext(newCtx)
 
 	return true, nil
 }

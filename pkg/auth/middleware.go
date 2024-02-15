@@ -18,7 +18,7 @@ func Middleware(s Service, errorView route.ErrorView) func(handler http.Handler)
 			}
 
 			ctx := route.NewContext(writer, request)
-			continuing, err := s.Handle(ctx)
+			continuing, err := s.Handle(&ctx)
 			if err != nil {
 				errorView.Redirect(ctx, err)
 				return
@@ -28,7 +28,7 @@ func Middleware(s Service, errorView route.ErrorView) func(handler http.Handler)
 				return
 			}
 
-			handler.ServeHTTP(writer, request)
+			handler.ServeHTTP(writer, ctx.Req)
 		})
 	}
 }

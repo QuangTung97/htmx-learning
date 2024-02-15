@@ -91,7 +91,8 @@ func TestService(t *testing.T) {
 			"abcd",
 		)
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
@@ -115,7 +116,8 @@ func TestService(t *testing.T) {
 		s.ht.NewGet("/users")
 		s.ht.Req.Header.Add("Cookie", "session_id=pre:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
@@ -130,7 +132,8 @@ func TestService(t *testing.T) {
 
 		s.stubRedirect()
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -154,7 +157,8 @@ func TestService(t *testing.T) {
 
 		s.stubFindSess(model.NullUserSession{})
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -184,7 +188,8 @@ func TestService(t *testing.T) {
 
 		s.stubRedirect()
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -199,7 +204,8 @@ func TestService(t *testing.T) {
 
 		s.stubRedirect()
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -223,7 +229,8 @@ func TestService(t *testing.T) {
 			},
 		})
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
@@ -240,7 +247,8 @@ func TestService(t *testing.T) {
 
 		s.stubFindSess(model.NullUserSession{})
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -262,7 +270,8 @@ func TestService(t *testing.T) {
 
 		s.stubRedirect()
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
@@ -300,7 +309,7 @@ func TestService(t *testing.T) {
 		})
 
 		ctx := s.ht.NewContext()
-		continuing, err := s.svc.Handle(ctx)
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, true, continuing)
 		assert.Equal(t, nil, err)
 
@@ -342,7 +351,8 @@ func TestService(t *testing.T) {
 
 		s.stubRedirect()
 
-		continuing, err := s.svc.Handle(s.ht.NewContext())
+		ctx := s.ht.NewContext()
+		continuing, err := s.svc.Handle(&ctx)
 		assert.Equal(t, false, continuing)
 		assert.Equal(t, nil, err)
 
