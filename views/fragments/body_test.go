@@ -2,14 +2,12 @@ package fragments
 
 import (
 	"bytes"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 
-	"htmx/pkg/route"
+	"htmx/pkg/testhelper"
 )
 
 func newGoldie(t *testing.T) *goldie.Goldie {
@@ -19,18 +17,9 @@ func newGoldie(t *testing.T) *goldie.Goldie {
 	)
 }
 
-func newContext(buf *bytes.Buffer) route.Context {
-	w := httptest.NewRecorder()
-	w.Body = buf
-	return route.NewContext(
-		w,
-		httptest.NewRequest(http.MethodGet, "/test", nil),
-	)
-}
-
 func TestRenderBody_WithSampleContent(t *testing.T) {
 	var buf bytes.Buffer
-	ctx := newContext(&buf)
+	ctx := testhelper.NewContext(&buf)
 
 	err := RenderBodyWithSampleContent(ctx, false, 0)
 	assert.Equal(t, nil, err)
@@ -41,7 +30,7 @@ func TestRenderBody_WithSampleContent(t *testing.T) {
 
 func TestRenderBody_WithSampleContent_Logged_In(t *testing.T) {
 	var buf bytes.Buffer
-	ctx := newContext(&buf)
+	ctx := testhelper.NewContext(&buf)
 
 	err := RenderBodyWithSampleContent(ctx, true, 11)
 	assert.Equal(t, nil, err)
@@ -53,7 +42,7 @@ func TestRenderBody_WithSampleContent_Logged_In(t *testing.T) {
 func TestRenderBody_WithSampleContent_With_HXRequest(t *testing.T) {
 	t.Run("logged in", func(t *testing.T) {
 		var buf bytes.Buffer
-		ctx := newContext(&buf)
+		ctx := testhelper.NewContext(&buf)
 		ctx.SetHXRequestHeader()
 
 		err := RenderBodyWithSampleContent(ctx, true, 11)
