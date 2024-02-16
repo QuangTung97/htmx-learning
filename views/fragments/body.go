@@ -1,11 +1,15 @@
 package fragments
 
 import (
+	"html/template"
+
 	"htmx/pkg/route"
-	"htmx/views"
 )
 
-type BodyData = views.BodyData
+type BodyData struct {
+	LoggedIn bool
+	Content  template.HTML
+}
 
 func RenderBody(ctx route.Context, data BodyData) error {
 	return ctx.View(TemplateBody, data)

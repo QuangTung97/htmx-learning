@@ -7,7 +7,7 @@ import (
 type Template = views.Template
 
 const (
-	TemplateBody = views.TemplateBody
+	TemplateBody Template = "body.html"
 
 	TemplateSampleContent Template = "home-sample.html"
 	TemplateReload        Template = "reload.html"

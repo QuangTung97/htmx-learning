@@ -30,13 +30,6 @@ func View(w io.Writer, body template.HTML) error {
 type Template string
 
 const (
-	TemplateBody Template = "body.html"
-
 	TemplateLogin Template = "auth/google-login.html"
 	TemplateError Template = "common/error.html"
 )
-
-type BodyData struct {
-	LoggedIn bool
-	Content  template.HTML
-}
