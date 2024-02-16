@@ -47,150 +47,151 @@
   </div>
 </nav>
 
-<div class="w-full flex justify-center">
-  <div class="w-3/5">
+<div class="w-full flex justify-center bg-gray-100 h-full">
+  <div class="w-full max-w-[1000px] bg-white">
     <h1 class="mb-2 text-2xl px-8 py-4 border-2 w-full max-w-96 rounded-2xl shadow font-bold">Hello World</h1>
 
-    <div class="space-y-2">
-      <div
-          class="text-2xl py-4 px-2 border-2 shadow rounded-full w-full max-w-96 text-center font-semibold text-purple-800"
-      >
-        Body Test
-      </div>
-      <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-full max-w-96">Some Span</div>
-      
-      <div class="flex items-center gap-x-1">
-        <button
-            class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
-            hx-post="/reload"
-            hx-target="#reload-target"
-            hx-swap="outerHTML"
-            hx-indicator="#reload-indicator"
-            hx-trigger="click queue:none"
+<div class="space-y-2">
+  <div
+      class="text-2xl py-4 px-2 border-2 shadow rounded-full w-full max-w-96 text-center font-semibold text-purple-800"
+  >
+    Body Test
+  </div>
+  <div id="reload-target" class="px-8 py-2 border-2 rounded-2xl text-center w-full max-w-96">Some Span</div>
+  
+  <div class="flex items-center gap-x-1">
+    <button
+        class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+        hx-post="/reload"
+        hx-target="#reload-target"
+        hx-swap="outerHTML"
+        hx-indicator="#reload-indicator"
+        hx-trigger="click queue:none"
+    >
+      Reload
+    </button>
+    <img
+        id="reload-indicator"
+        src="/images/spinning-circles.svg" class="htmx-indicator" alt="..."
+        width="25px"
+    />
+  </div>
+  <button
+      class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+      hx-post="/reload"
+      hx-target="#reload-target"
+      hx-swap="outerHTML"
+      hx-indicator="#top-loader"
+      hx-trigger="click queue:none"
+  >
+    Other Reload
+  </button>
+  <table class="text-gray-700 shadow whitespace-nowrap w-full">
+    <thead>
+    <tr class="bg-blue-100 border border-gray-300 font-semibold text-lg">
+      <td class="pl-4 pr-8 py-2 w-32">Header 1</td>
+      <td class="pr-8 py-2">Header 2</td>
+      <td class="pr-4 py-2">Header 3</td>
+      <td class="pr-4 py-2 w-44">Actions</td>
+    </tr>
+    </thead>
+    <tbody class="text-lg border-x border-b border-gray-300">
+    
+    <tr class="even:bg-gray-100">
+      <td class="pl-4 py-2">Column 1</td>
+      <td class="py-2">Column 2</td>
+      <td class="py-2">Column 3</td>
+      <td class="py-2 pr-2">
+        <a href="#"
+           class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
+          Edit
+        </a>
+        <span
+            hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
+            class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
         >
-          Reload
-        </button>
-        <img
-            id="reload-indicator"
-            src="/public/images/spinning-circles.svg" class="htmx-indicator" alt="..."
-            width="25px"
-        />
-      </div>
-      <button
-          class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
-          hx-post="/reload"
-          hx-target="#reload-target"
-          hx-swap="outerHTML"
-          hx-indicator="#top-loader"
-          hx-trigger="click queue:none"
-      >
-        Other Reload
-      </button>
-      <table class="text-gray-700 shadow whitespace-nowrap w-full">
-        <thead>
-        <tr class="bg-blue-100 border border-gray-300 font-semibold text-lg">
-          <td class="pl-4 pr-8 py-2 w-32">Header 1</td>
-          <td class="pr-8 py-2">Header 2</td>
-          <td class="pr-4 py-2">Header 3</td>
-          <td class="pr-4 py-2 w-44">Actions</td>
-        </tr>
-        </thead>
-        <tbody class="text-lg border-x border-b border-gray-300">
-        
-        <tr class="even:bg-gray-100">
-          <td class="pl-4 py-2">Column 1</td>
-          <td class="py-2">Column 2</td>
-          <td class="py-2">Column 3</td>
-          <td class="py-2 pr-2">
-            <a href="#"
-               class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
-              Edit
-            </a>
-            <span
-                hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
-                class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
-            >
               Delete
             </span>
-          </td>
-        </tr>
-        
-        <tr class="even:bg-gray-100">
-          <td class="pl-4 py-2">Column 1</td>
-          <td class="py-2">Column 2</td>
-          <td class="py-2">Column 3</td>
-          <td class="py-2 pr-2">
-            <a href="#"
-               class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
-              Edit
-            </a>
-            <span
-                hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
-                class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
-            >
+      </td>
+    </tr>
+    
+    <tr class="even:bg-gray-100">
+      <td class="pl-4 py-2">Column 1</td>
+      <td class="py-2">Column 2</td>
+      <td class="py-2">Column 3</td>
+      <td class="py-2 pr-2">
+        <a href="#"
+           class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
+          Edit
+        </a>
+        <span
+            hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
+            class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
+        >
               Delete
             </span>
-          </td>
-        </tr>
-        
-        <tr class="even:bg-gray-100">
-          <td class="pl-4 py-2">Column 1</td>
-          <td class="py-2">Column 2</td>
-          <td class="py-2">Column 3</td>
-          <td class="py-2 pr-2">
-            <a href="#"
-               class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
-              Edit
-            </a>
-            <span
-                hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
-                class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
-            >
+      </td>
+    </tr>
+    
+    <tr class="even:bg-gray-100">
+      <td class="pl-4 py-2">Column 1</td>
+      <td class="py-2">Column 2</td>
+      <td class="py-2">Column 3</td>
+      <td class="py-2 pr-2">
+        <a href="#"
+           class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
+          Edit
+        </a>
+        <span
+            hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
+            class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
+        >
               Delete
             </span>
-          </td>
-        </tr>
-        
-        <tr class="even:bg-gray-100">
-          <td class="pl-4 py-2">Column 1</td>
-          <td class="py-2">Column 2</td>
-          <td class="py-2">Column 3</td>
-          <td class="py-2 pr-2">
-            <a href="#"
-               class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
-              Edit
-            </a>
-            <span
-                hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
-                class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
-            >
+      </td>
+    </tr>
+    
+    <tr class="even:bg-gray-100">
+      <td class="pl-4 py-2">Column 1</td>
+      <td class="py-2">Column 2</td>
+      <td class="py-2">Column 3</td>
+      <td class="py-2 pr-2">
+        <a href="#"
+           class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
+          Edit
+        </a>
+        <span
+            hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
+            class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
+        >
               Delete
             </span>
-          </td>
-        </tr>
-        
-        <tr class="even:bg-gray-100">
-          <td class="pl-4 py-2">Column 1</td>
-          <td class="py-2">Column 2</td>
-          <td class="py-2">Column 3</td>
-          <td class="py-2 pr-2">
-            <a href="#"
-               class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
-              Edit
-            </a>
-            <span
-                hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
-                class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
-            >
+      </td>
+    </tr>
+    
+    <tr class="even:bg-gray-100">
+      <td class="pl-4 py-2">Column 1</td>
+      <td class="py-2">Column 2</td>
+      <td class="py-2">Column 3</td>
+      <td class="py-2 pr-2">
+        <a href="#"
+           class="bg-sky-700 hover:bg-sky-600 active:bg-sky-500 rounded-full text-white px-4 py-2">
+          Edit
+        </a>
+        <span
+            hx-delete="/table/row/10" hx-confirm="Are you sure to delete this row?"
+            class="ml-1 bg-red-700 hover:bg-red-600 active:bg-red-400 rounded-full text-white px-4 py-2 cursor-pointer"
+        >
               Delete
             </span>
-          </td>
-        </tr>
-        
-        </tbody>
-      </table>
-      
-    </div>
+      </td>
+    </tr>
+    
+    </tbody>
+  </table>
+  
+</div>
+
   </div>
 </div>
 
