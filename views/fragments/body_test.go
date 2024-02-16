@@ -3,18 +3,10 @@ package fragments
 import (
 	"testing"
 
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 
 	"htmx/views/viewtest"
 )
-
-func newGoldie(t *testing.T) *goldie.Goldie {
-	return goldie.New(t,
-		goldie.WithFixtureDir("testdata"),
-		goldie.WithNameSuffix(".html"),
-	)
-}
 
 func TestRenderBody_WithSampleContent(t *testing.T) {
 	v := viewtest.New(t)

@@ -4,6 +4,8 @@ const (
 	Home  = "/"
 	Error = "/error"
 
+	Companies = "/companies"
+
 	Login  = "/login"
 	Logout = "/logout"
 

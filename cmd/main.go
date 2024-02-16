@@ -43,6 +43,12 @@ func main() {
 		return fragments.RenderBodyWithSampleContent(ctx, ok, counter.Load())
 	})
 
+	mux.Get(routes.Companies, func(ctx route.Context) error {
+		time.Sleep(1 * time.Second)
+		_, ok := auth.GetUserInfoNull(ctx.Ctx)
+		return fragments.RenderBodyWithSampleContent(ctx, ok, counter.Load())
+	})
+
 	mux.Post("/reload", func(ctx route.Context) error {
 		if _, ok := auth.GetUserInfoNull(ctx.Ctx); !ok {
 			return auth.ErrUserNotYetLoggedIn

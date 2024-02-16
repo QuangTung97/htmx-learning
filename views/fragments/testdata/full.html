@@ -17,6 +17,8 @@
     <a
         href="/"
         class="text-white font-bold text-2xl px-8 hover:text-gray-200"
+        hx-boost="true"
+        hx-indicator="#top-loader"
     >
       HTMX
     </a>
@@ -35,6 +37,16 @@
       </button>
     </form>
   </div>
+
+  <div class="flex-col items-center gap-4">
+    <a
+        href="/companies"
+        class="text-white text-lg font-bold hover:text-green-200"
+        hx-boost="true"
+        hx-indicator="#top-loader"
+    >Companies</a>
+  </div>
+
   <div class="flex items-center justify-end">
     
     <button
