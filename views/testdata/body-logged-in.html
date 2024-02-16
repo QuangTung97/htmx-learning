@@ -1,3 +1,4 @@
+<div class="fixed w-full h-2 top-loader htmx-indicator" id="top-loader"></div>
 <nav class="w-full flex justify-between h-16 items-center bg-indigo-500">
   <div class="flex items-center justify-start">
     <a
@@ -32,6 +33,7 @@
     
   </div>
 </nav>
+
 <div class="w-full flex justify-center">
   <div class="w-3/5">
     <h1 class="mb-2 text-2xl px-8 py-4 border-2 w-full max-w-96 rounded-2xl shadow font-bold">Hello World</h1>
@@ -61,6 +63,16 @@
             width="25px"
         />
       </div>
+      <button
+          class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+          hx-post="/reload"
+          hx-target="#reload-target"
+          hx-swap="outerHTML"
+          hx-indicator="#top-loader"
+          hx-trigger="click queue:none"
+      >
+        Other Reload
+      </button>
       <table class="text-gray-700 shadow whitespace-nowrap w-full">
         <thead>
         <tr class="bg-blue-100 border border-gray-300 font-semibold text-lg">

@@ -28,6 +28,16 @@
             width="25px"
         />
       </div>
+      <button
+          class="px-8 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold active:bg-blue-400"
+          hx-post="/reload"
+          hx-target="#reload-target"
+          hx-swap="outerHTML"
+          hx-indicator="#top-loader"
+          hx-trigger="click queue:none"
+      >
+        Other Reload
+      </button>
       <table class="text-gray-700 shadow whitespace-nowrap w-full">
         <thead>
         <tr class="bg-blue-100 border border-gray-300 font-semibold text-lg">
