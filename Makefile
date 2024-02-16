@@ -4,7 +4,7 @@ test:
 	go test ./...
 
 test-update:
-	go test ./... -update
+	GOLDEN_UPDATE=1 go test ./...
 
 build-css:
 	cd views/styles && npx tailwindcss -i ./input.css -o ../../public/styles.css --watch

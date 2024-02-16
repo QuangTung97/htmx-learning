@@ -1,13 +1,12 @@
 package fragments
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 
-	"htmx/pkg/testhelper"
+	"htmx/views/viewtest"
 )
 
 func newGoldie(t *testing.T) *goldie.Goldie {
@@ -18,37 +17,31 @@ func newGoldie(t *testing.T) *goldie.Goldie {
 }
 
 func TestRenderBody_WithSampleContent(t *testing.T) {
-	var buf bytes.Buffer
-	ctx := testhelper.NewContext(&buf)
+	v := viewtest.New(t)
 
-	err := RenderBodyWithSampleContent(ctx, false, 0)
+	err := RenderBodyWithSampleContent(v.Ctx, false, 0)
 	assert.Equal(t, nil, err)
 
-	g := newGoldie(t)
-	g.Assert(t, "full", buf.Bytes())
+	v.Assert("full")
 }
 
 func TestRenderBody_WithSampleContent_Logged_In(t *testing.T) {
-	var buf bytes.Buffer
-	ctx := testhelper.NewContext(&buf)
+	v := viewtest.New(t)
 
-	err := RenderBodyWithSampleContent(ctx, true, 11)
+	err := RenderBodyWithSampleContent(v.Ctx, true, 11)
 	assert.Equal(t, nil, err)
 
-	g := newGoldie(t)
-	g.Assert(t, "full-logged-in", buf.Bytes())
+	v.Assert("full-logged-in")
 }
 
 func TestRenderBody_WithSampleContent_With_HXRequest(t *testing.T) {
 	t.Run("logged in", func(t *testing.T) {
-		var buf bytes.Buffer
-		ctx := testhelper.NewContext(&buf)
-		ctx.SetHXRequestHeader()
+		v := viewtest.New(t)
+		v.Ctx.SetHXRequestHeader()
 
-		err := RenderBodyWithSampleContent(ctx, true, 11)
+		err := RenderBodyWithSampleContent(v.Ctx, true, 11)
 		assert.Equal(t, nil, err)
 
-		g := newGoldie(t)
-		g.Assert(t, "body-logged-in", buf.Bytes())
+		v.Assert("body-logged-in")
 	})
 }

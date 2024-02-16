@@ -38,12 +38,3 @@ func (h *HTTPTest) NewContext() route.Context {
 	}
 	return route.NewContext(h.newResponse(), h.Req)
 }
-
-func NewContext(buf *bytes.Buffer) route.Context {
-	w := httptest.NewRecorder()
-	w.Body = buf
-	return route.NewContext(
-		w,
-		httptest.NewRequest(http.MethodGet, "/test-url", nil),
-	)
-}
