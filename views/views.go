@@ -33,11 +33,10 @@ const (
 	TemplateBody Template = "body.html"
 
 	TemplateLogin Template = "auth/google-login.html"
-
 	TemplateError Template = "common/error.html"
 )
 
 type BodyData struct {
 	LoggedIn bool
-	Table    []string
+	Content  template.HTML
 }

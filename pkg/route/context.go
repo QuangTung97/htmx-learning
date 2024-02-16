@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	"html/template"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -24,16 +25,26 @@ func NewContext(w http.ResponseWriter, r *http.Request) Context {
 	}
 }
 
+func (Context) RenderHTML(tmpl views.Template, data any) (template.HTML, error) {
+	return views.ExecuteHTML(tmpl, data)
+}
+
 func (c Context) Render(template views.Template, data any) error {
 	return views.Execute(c.Writer, template, data)
 }
 
+const hxRequestHeader = "HX-Request"
+
 func (c Context) HasHxRequestHeader() bool {
-	req := c.Req.Header.Get("HX-Request")
+	req := c.Req.Header.Get(hxRequestHeader)
 	if len(req) == 0 {
 		return false
 	}
 	return true
+}
+
+func (c Context) SetHXRequestHeader() {
+	c.Req.Header.Set(hxRequestHeader, "true")
 }
 
 func (c Context) IsHxRequest() bool {
@@ -51,7 +62,6 @@ func (c Context) IsHxRequest() bool {
 
 const hxPushURLHeader = "Hx-Push-Url"
 
-// View ...
 func (c Context) View(template views.Template, data any) error {
 	if c.IsHxRequest() {
 		if len(c.Writer.Header().Get(hxPushURLHeader)) == 0 {

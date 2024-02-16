@@ -11,7 +11,7 @@ import (
 	"htmx/pkg/auth"
 	auth_handlers "htmx/pkg/auth/handlers"
 	"htmx/pkg/route"
-	"htmx/views"
+	"htmx/views/fragments"
 	"htmx/views/routes"
 )
 
@@ -40,12 +40,7 @@ func main() {
 
 	mux.Get(routes.Home, func(ctx route.Context) error {
 		_, ok := auth.GetUserInfoNull(ctx.Ctx)
-		return ctx.View(views.TemplateBody, views.BodyData{
-			LoggedIn: ok,
-			Table: []string{
-				"a", "b", "c", "d", "e",
-			},
-		})
+		return fragments.RenderBodyWithSampleContent(ctx, ok, counter.Load())
 	})
 
 	mux.Post("/reload", func(ctx route.Context) error {
@@ -54,12 +49,10 @@ func main() {
 		}
 
 		time.Sleep(500 * time.Millisecond)
-		type tmplData struct {
-			Count int64
-		}
-		return ctx.Render("reload.html", tmplData{
+
+		return fragments.ReloadData{
 			Count: counter.Add(1),
-		})
+		}.Render(ctx)
 	})
 
 	auth_handlers.Register(unv)
