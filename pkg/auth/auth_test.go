@@ -220,7 +220,7 @@ func TestService(t *testing.T) {
 
 		s.ht.NewGet("/users")
 
-		cookie := "session_id=sess:1234:some-session-id; Path=/; Max-Age=2592000; HttpOnly"
+		cookie := "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly"
 		s.ht.Req.Header.Add("Cookie", cookie)
 
 		s.stubFindSess(model.NullUserSession{
