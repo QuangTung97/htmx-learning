@@ -120,6 +120,7 @@ func (s *serviceImpl) setSessionCookie(ctx route.Context, sessID string) error {
 		Name:  sessionIDCookie,
 		Value: sessID,
 
+		Path:     cookiePath,
 		MaxAge:   maxAge,
 		Secure:   s.isProd,
 		HttpOnly: true,
@@ -134,6 +135,7 @@ func (s *serviceImpl) setSessionCookie(ctx route.Context, sessID string) error {
 		Name:  csrfTokenCookie,
 		Value: token,
 
+		Path:   cookiePath,
 		MaxAge: maxAge,
 		Secure: s.isProd,
 	})
@@ -183,10 +185,16 @@ func (s *serviceImpl) handleError(ctx route.Context, err error) (bool, error) {
 	return false, nil
 }
 
+const cookiePath = "/"
+
+func getCookie(ctx route.Context, name string) (*http.Cookie, error) {
+	return ctx.Req.Cookie(name)
+}
+
 func (s *serviceImpl) Handle(ctxPtr *route.Context) (bool, error) {
 	ctx := *ctxPtr
 
-	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
+	sessCookie, err := getCookie(ctx, sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
 			return true, s.setPreSession(ctx)
@@ -235,7 +243,7 @@ func (s *serviceImpl) Handle(ctxPtr *route.Context) (bool, error) {
 }
 
 func (s *serviceImpl) VerifyCSRFToken(ctx route.Context, token string) (ok bool) {
-	sessCookie, err := ctx.Req.Cookie(sessionIDCookie)
+	sessCookie, err := getCookie(ctx, sessionIDCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
 			return s.redirectToError(ctx, errors.New("no session id when verify csrf token"))

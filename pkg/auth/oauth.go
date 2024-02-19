@@ -119,7 +119,7 @@ type googleUser struct {
 }
 
 func (s *loginServiceImpl) BuildOAuthState(ctx route.Context) (string, error) {
-	cookie, err := ctx.Req.Cookie(csrfTokenCookie)
+	cookie, err := getCookie(ctx, csrfTokenCookie)
 	if err != nil {
 		return "", errors.New("invalid csrf token")
 	}

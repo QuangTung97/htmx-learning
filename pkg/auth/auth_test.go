@@ -99,8 +99,8 @@ func TestService(t *testing.T) {
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": []string{
-				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly",
-				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000", token),
+				"session_id=pre:some-session-id; Path=/; Max-Age=2592000; HttpOnly",
+				fmt.Sprintf("csrf_token=%s!abcd; Path=/; Max-Age=2592000", token),
 			},
 		}, s.ht.Writer.Header())
 
@@ -170,8 +170,8 @@ func TestService(t *testing.T) {
 		token := "cHJlOnNvbWUtc2Vzc2lvbi1pZCFhYmNk7H8KcrNzLLI07eG4eyWCAzHv75y8nWyihL0Tij11wZo="
 		assert.Equal(t, http.Header{
 			"Set-Cookie": {
-				"session_id=pre:some-session-id; Max-Age=2592000; HttpOnly",
-				fmt.Sprintf("csrf_token=%s!abcd; Max-Age=2592000", token),
+				"session_id=pre:some-session-id; Path=/; Max-Age=2592000; HttpOnly",
+				fmt.Sprintf("csrf_token=%s!abcd; Path=/; Max-Age=2592000", token),
 			},
 			"Location":     {"/"},
 			"Content-Type": {"text/html; charset=utf-8"},
@@ -219,7 +219,9 @@ func TestService(t *testing.T) {
 		s := newServiceTest()
 
 		s.ht.NewGet("/users")
-		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+
+		cookie := "session_id=sess:1234:some-session-id; Path=/; Max-Age=2592000; HttpOnly"
+		s.ht.Req.Header.Add("Cookie", cookie)
 
 		s.stubFindSess(model.NullUserSession{
 			Valid: true,
@@ -242,7 +244,7 @@ func TestService(t *testing.T) {
 		s := newServiceTest()
 
 		s.ht.NewGet("/users")
-		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly; SameSite=Strict")
+		s.ht.Req.Header.Add("Cookie", "session_id=sess:1234:some-session-id; Max-Age=2592000; HttpOnly")
 		s.ht.Req.Header.Add("HX-Request", "true")
 
 		s.stubFindSess(model.NullUserSession{})
@@ -260,6 +262,7 @@ func TestService(t *testing.T) {
 			"Hx-Redirect": {"/"},
 		}, headers)
 		assert.Equal(t, http.StatusOK, s.ht.Writer.Code)
+		assert.Equal(t, 1, len(s.repo.FindUserSessionCalls()))
 	})
 
 	t.Run("post, has session, without csrf_token, redirect to error", func(t *testing.T) {
